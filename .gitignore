@@ -3,3 +3,5 @@ slurm*.tar.bz2
 slurm
 compile_commands.json
 build
+/libslurm-uenv-mount.so
+/rpm/
