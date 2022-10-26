@@ -1,15 +1,12 @@
-
-project('slurm-squashfs-mount', ['cpp'], default_options : ['cpp_std=c++17'], version: files('VERSION'), meson_version: '>=0.57')
-
-dep_libmount = dependency('mount')
-
+project('squashfs-mount', ['c', 'cpp'], default_options : ['c_std=c99', 'cpp_std=c++17'], version:
+files('VERSION'), meson_version: '>=0.57')
 version = meson.project_version()
 
-c_args = ['-DVERSION="@".format(version)]']
+# Look for libmount, squashfuse_ll
+dep_libmount = dependency('mount')
 
-plugin = shared_module('plugin',
-    sources: ['plugin.cpp'],
-    dependencies: [dep_libmount],
-    include_directories: ['slurm'],
-    c_args: c_args,
-    install: true)
+
+shared_module('sqfs-spank-plugin',
+              sources: ['plugin.cpp', 'mount.cpp'],
+              dependencies: [dep_libmount],
+              install: true)
