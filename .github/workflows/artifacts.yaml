@@ -1,0 +1,42 @@
+name: artifacts
+on: [push, pull_request]
+
+## Tests that all artifacts can be built on every push.
+## Uploads the artifacts to the GitHub release page for tags.
+
+jobs:
+  rpm:
+    runs-on: ubuntu-20.04
+    container: simonpzh/slurm-dkr2.suse
+    # container: registry.suse.com/bci/bci-base:15.3
+    steps:
+      - name: setup-environment
+        run: |
+          zypper install -y rpm-build
+      - name: clone
+        uses: actions/checkout@v2
+      - name: build-srpm
+        run: |
+          make rpm
+          sudo rpmbuild --rebuild "$(find rpm/SRPMS -name '*.rpm' -type f -print -quit)" --define "_topdir $(pwd)/rpm"
+          sudo rpm --install "$(find rpm/RPMS -name '*.rpm' -type f -print -quit)"
+          find rpm -name '*.rpm' -type f -exec cp {} . \;
+      - name: upload-rpm
+        uses: actions/upload-artifact@v3
+        with:
+          name: rpm
+          path: '*.rpm'
+
+  tag-release:
+    runs-on: ubuntu-20.04
+    needs: rpm
+    steps:
+      - name: download-artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: rpm
+      - name: release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: '*.rpm'
