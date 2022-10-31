@@ -8,9 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     container: ghcr.io/eth-cscs/slurm-container-test:latest
 
-    runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v3
     - name: Build
-      run: make
+      run: lsb_release && ls && pwd
