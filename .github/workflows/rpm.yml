@@ -1,0 +1,16 @@
+name: Release plugin RPM
+
+on:
+  workflow_dispatch:
+
+jobs:
+  rpm:
+    runs-on: ubuntu-latest
+    container: ghcr.io/eth-cscs/slurm-container-test:latest
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build
+      run: make
