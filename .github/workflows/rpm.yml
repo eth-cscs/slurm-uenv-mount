@@ -6,7 +6,12 @@ on:
 jobs:
   rpm:
     runs-on: ubuntu-latest
-    container: ghcr.io/eth-cscs/slurm-container-test:latest
+    container: 
+      image: ghcr.io/eth-cscs/slurm-container-test:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
 
     steps:
     - uses: actions/checkout@v3
