@@ -16,4 +16,27 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Build
-      run: apt-get update -y && apt-get upgrade -y && apt-get install lsb-release -y && apt-get clean all && lsb_release && ls && pwd
+      run: |
+        apt-get update -y
+        apt-get upgrade -y
+        apt-get install lsb-release -y
+        apt-get clean all
+        lsb_release
+        ls && pwd
+
+    - name:
+      run: zypper install -y rpm-build
+    - name: clone
+      uses: actions/checkout@v2
+    - name: build-srpm
+      run: |
+        make rpm
+        sudo rpmbuild --rebuild "$(find rpm/SRPMS -name '*.rpm' -type f -print -quit)" --define "_topdir $(pwd)/rpm"
+        sudo rpm --install "$(find rpm/RPMS -name '*.rpm' -type f -print -quit)"
+        find rpm -name '*.rpm' -type f -exec cp {} . \;
+    - name: upload-rpm        
+      uses: actions/upload-artifact@v3
+      with:
+        name: rpm
+        path: '*.rpm'
+
