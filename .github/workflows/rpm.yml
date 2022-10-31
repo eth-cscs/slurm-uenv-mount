@@ -16,4 +16,4 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Build
-      run: apt-get install -y lsb-release && lsb_release && ls && pwd
+      run: apt-get update -y && apt-get upgrade -y && apt-get install lsb-release -y && apt-get clean all && lsb_release && ls && pwd
