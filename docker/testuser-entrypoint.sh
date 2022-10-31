@@ -1,3 +1,3 @@
 #!/bin/bash
 
-exec /entrypoint.sh sh -c "su  testuser -P  -s /bin/bash -l"
+exec /entrypoint.sh su testuser -s /bin/bash -l
