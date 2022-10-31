@@ -12,8 +12,8 @@ RUN  wget https://github.com/vasi/squashfuse/archive/refs/tags/0.1.105.tar.gz &&
 RUN --mount=type=bind,source=./,target=/CODE \
     meson setup /build /CODE &&\
     ninja install  -C /build  &&\
-    mkdir -p /etc/slurm/plugstack.conf.d
-    # echo "required /usr/local/lib/x86_64-linux-gnu/libslurm-uenv-mount.so" > /etc/slurm/plugstack.conf.d/example.conf
+    mkdir -p /etc/slurm/plugstack.conf.d &&\
+    echo "required /usr/local/lib64/libslurm-uenv-mount.so" > /usr/local/etc/slurm/plugstack.conf
 
 RUN mkdir /user-environment
 
