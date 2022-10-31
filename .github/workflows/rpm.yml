@@ -9,7 +9,7 @@ jobs:
     container: 
       image: ghcr.io/eth-cscs/slurm-container-test:latest
       credentials:
-        username: jpcoles
+        username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
 
