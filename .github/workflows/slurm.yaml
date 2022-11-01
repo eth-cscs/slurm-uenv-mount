@@ -1,0 +1,21 @@
+name: slurm
+on: [push, pull_request]
+
+jobs:
+  makefile:
+    runs-on: ubuntu-20.04
+    container:
+      image: simonpzh/slurm-dkr2.suse
+      args: --entrypoint=./entrypoint.sh
+    steps:
+      - uses: actions/checkout@v2
+      - name: setup
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y util-linux libmount-dev libfuse-dev libzstd-dev
+          wget https://github.com/vasi/squashfuse/archive/refs/tags/0.1.105.tar.gz && tar xf 0.1.105.tar.gz
+          cd squashfuse-0.1.105 || exit 1
+          ./autogen.sh && ./configure --prefix=/usr && sudo make install
+          # check if slurmd is running
+          ps aux
+          # start slurm
