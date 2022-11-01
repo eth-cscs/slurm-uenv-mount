@@ -20,7 +20,10 @@ RUN zypper install -y\
     zlib-devel\
     htop\
     nnn\
+    util-linux\
+    util-linux-systemd\
     psmisc\
+    psutils\
     strace
 
 # install meson and ninja via pip (packages are too old)
