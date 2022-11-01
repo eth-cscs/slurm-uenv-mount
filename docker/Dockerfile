@@ -37,6 +37,8 @@ RUN --mount=type=bind,source=./,target=/CODE \
 RUN mkdir /user-environment
 
 RUN useradd testuser
+RUN mkdir -p /home/testuser
+RUN chown testuser /home/testuser
 
 # USER testuser
 COPY docker/testuser-entrypoint.sh .
