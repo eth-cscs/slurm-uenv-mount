@@ -92,11 +92,11 @@ int do_mount(const char *mount_point, const char *squashfs_file) {
     return ESPANK_ERROR;
   }
 
-  /// how to check for errors:
-  /// https://ftp.ntu.edu.tw/pub/linux/utils/util-linux/v2.38/libmount-docs/libmount-Mount-context.html#mnt-context-mount
-  int rc = mnt_context_mount(cxt);
-  if (!(rc == 0 && mnt_context_get_status(cxt) == 1)) {
-    slurm_spank_log("failed `mnt_context_mount`");
+  if (mnt_context_mount(cxt) != 0) {
+    // https://ftp.ntu.edu.tw/pub/linux/utils/util-linux/v2.38/libmount-docs/libmount-Mount-context.html#mnt-context-mount
+    char buf[256];
+    rc = mnt_context_get_excode(cxt, rc, buf, sizeof(buf));
+    slurm_spank_log("%s:%s", mnt_context_get_target(cxt), buf);
     return ESPANK_ERROR;
   }
 
