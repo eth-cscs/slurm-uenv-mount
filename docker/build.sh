@@ -1,6 +1,8 @@
 #!/usr/bin/bash
 
-TAG=centos-slurm-uenv-mount
+set -x
+
+TAG=slurm-uenv-mount
 
 SOURCE_DIR="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
 
