@@ -15,7 +15,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Build binary
     - name: Checkout code
       uses: actions/checkout@v2
     - name: Install additional packages
