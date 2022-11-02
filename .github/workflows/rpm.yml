@@ -46,7 +46,7 @@ jobs:
     - name: Get build tools
       run: |
         python3 -m pip install --upgrade pip \
-        && python3 -m pip install meson
+        && python3 -m pip install meson ninja
       
     - name: Build Plugin
       run: meson setup BUILD
