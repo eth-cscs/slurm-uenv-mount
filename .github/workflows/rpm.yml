@@ -15,14 +15,44 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Build
-      run: |
-        apt-get update -y
-        apt-get upgrade -y
-        apt-get install lsb-release -y
-        apt-get clean all
-        lsb_release
-        ls && pwd
+    - name: Build binary
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Install additional packages
+      run: >
+        zypper install -y 
+          fuse3-devel
+          squashfs
+          python3-pip
+          mpich
+          mpich-devel
+          vim
+          libmount-devel
+          wget
+          gzip
+          autoconf
+          automake
+          libtool
+          xz-devel
+          liblz4-devel
+          libzstd-devel
+          lzo-devel
+          zlib-devel
+          htop
+          nnn
+          util-linux
+          util-linux-systemd
+          psmisc
+          psutils
+          strace
+          
+    - name: Get build tools
+      run: >
+           python3 -m pip install --upgrade pip 
+        && python3 -m pip install meson
+      
+    - name: Build Plugin
+      run: meson setup BUILD
 
 #   - name:
 #     run: zypper install -y rpm-build
