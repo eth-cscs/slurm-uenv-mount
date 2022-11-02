@@ -48,6 +48,10 @@ jobs:
         python3 -m pip install --upgrade pip \
         && python3 -m pip install meson ninja
       
+    - name: Where am I
+      run: |
+        ls
+        pwd
     - name: Build Plugin
       run: CPPFLAGS=-I$SLURM_ROOT/include meson --prefix=$SLURM_ROOT build \
           && ninja install -C build \
