@@ -49,7 +49,13 @@ jobs:
         && python3 -m pip install meson ninja
       
     - name: Build Plugin
-      run: meson setup BUILD
+      run: CPPFLAGS=-I$SLURM_ROOT/include meson --prefix=$SLURM_ROOT build \
+          && ninja install -C build \
+          cp $SLURM_ROOT/lib64/libslurm-uenv-mount.so /libslurm-uenv-mount-$SLURM_VERSION.so
+    - name: Upload library
+      uses: softprops/action-gh-release@v1
+      with:
+        name: libslurm-uenv-mount-$SLURM_VERSION.so
 
 #   - name:
 #     run: zypper install -y rpm-build
