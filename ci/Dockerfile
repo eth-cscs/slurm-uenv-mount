@@ -1,4 +1,6 @@
-FROM ghcr.io/eth-cscs/slurm-container-20.11.9:latest
+ARG DOCKER_CONTAINER 
+FROM ${DOCKER_CONTAINER}
+#FROM ghcr.io/eth-cscs/slurm-container-20.11.9:latest
 
 RUN zypper install -y\
     fuse3-devel\
@@ -29,10 +31,6 @@ RUN zypper install -y\
 
 # install meson and ninja via pip (packages are too old)
 RUN python3 -m pip install --upgrade pip && python3 -m pip install meson ninja
-#RUN wget https://github.com/vasi/squashfuse/archive/refs/tags/0.1.105.tar.gz \
-#    && tar xf 0.1.105.tar.gz \
-#    && cd squashfuse-0.1.105 || exit 1 \
-#    && ./autogen.sh && ./configure --prefix=/usr/local && sudo make install
 
 RUN --mount=type=bind,source=../,target=/CODE \
     CPPFLAGS=-I$SLURM_ROOT/include meson setup --prefix=$SLURM_ROOT /build /CODE \
@@ -46,6 +44,5 @@ RUN mkdir -p /home/testuser
 RUN chown testuser /home/testuser
 
 # USER testuser
-COPY docker/testuser-entrypoint-jpc.sh .
-
+#COPY docker/testuser-entrypoint-jpc.sh .
 #ENTRYPOINT ./testuser-entrypoint-jpc.sh

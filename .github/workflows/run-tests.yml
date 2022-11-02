@@ -1,0 +1,42 @@
+name: Test plugin
+
+on:
+  workflow_dispatch:
+
+env:
+  TAG: slurm-uenv-mount:latest
+  DOCKER_CONTAINER: ghcr.io/eth-cscs/slurm-container-20.11.9:latest
+
+jobs:
+  build-test-image:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Get Docker Image
+      run: echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+    - name: Build Tester Image
+      run: make -f ci/Makefile build
+    - name: Run Tester Image
+      run: docker run -it ${{ env.TAG }} srun -t 10  --uenv-mount-file=0.1.105.tar.gz ls 
+
+      
+#    - name: Upload library
+#      uses: softprops/action-gh-release@v1
+#      with:
+#        name: libslurm-uenv-mount-$SLURM_VERSION.so
+#
+#   - name:
+#     run: zypper install -y rpm-build
+#   - name: clone
+#     uses: actions/checkout@v2
+#   - name: build-srpm
+#     run: |
+#       make rpm
+#       sudo rpmbuild --rebuild "$(find rpm/SRPMS -name '*.rpm' -type f -print -quit)" --define "_topdir $(pwd)/rpm"
+#       sudo rpm --install "$(find rpm/RPMS -name '*.rpm' -type f -print -quit)"
+#       find rpm -name '*.rpm' -type f -exec cp {} . \;
+#   - name: upload-rpm        
+#     uses: actions/upload-artifact@v3
+#     with:
+#       name: rpm
+#       path: '*.rpm'
