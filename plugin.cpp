@@ -3,6 +3,7 @@
 // #include <stdio.h>
 
 #include <optional>
+#include <slurm/slurm_errno.h>
 #include <string>
 
 // // root version
@@ -85,13 +86,11 @@ int slurm_spank_init(spank_t sp, int ac, char **av) {
       1, // requires an argument
       0, // plugin specific value to pass to the callback (unnused)
       [](int val, const char *optarg, int remote) -> int {
-        slurm_info("uenv-mount-point: val:%d optarg:%s remote:%d", val, optarg,
-                   remote);
+        slurm_info("uenv-mount-point: val:%d optarg:%s remote:%d", val, optarg, remote);
         if (!optarg) { // is this required if the has_arg flag == 1?
           return ESPANK_BAD_ARG;
         }
-        // todo: parse string to validate that the file exists
-        // todo: parse string to validate that it is a valid and allowed path
+        // check that file exists happens in do_mount
         args.file = std::string{optarg};
         return ESPANK_SUCCESS;
       }};
@@ -122,8 +121,12 @@ int slurm_spank_init(spank_t sp, int ac, char **av) {
 }
 
 int slurm_spank_task_init_privileged(spank_t sp, int ac, char **av) {
+  char env_mount_file[256];
   if (args.file) {
-    return do_mount(args.mount_point.c_str(), args.file->c_str());
+    return do_mount(sp, args.mount_point.c_str(), args.file->c_str());
+  } else if (spank_getenv(sp, ENV_MOUNT_FILE, env_mount_file, 256) == ESPANK_SUCCESS) {
+    // --uenv-mount-file flag missing, but an ENV_MOUNT_FILE is set in env
+    return do_mount(sp, args.mount_point.c_str(), env_mount_file);
   }
 
   return ESPANK_SUCCESS;
