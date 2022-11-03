@@ -6,6 +6,8 @@ on:
 jobs:
   build-test-image:
     runs-on: ubuntu-latest
+    env:
+      DOCKER_CONTAINER: ghcr.io/eth-cscs/slurm-container-20.11.9:latest
     steps:
     - uses: actions/checkout@v3
     - name: Get Docker Image
