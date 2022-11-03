@@ -7,4 +7,4 @@ build:
 		-t slurm-uenv-mount:latest .)
 
 run:
-	docker run -it slurm-uenv-mount:latest bash
+	docker run --name slurm-uenv-mount --rm --privileged -it slurm-uenv-mount:latest bash
