@@ -1,4 +1,5 @@
-FROM ghcr.io/eth-cscs/slurm-container-20.11.9:latest
+# FROM ghcr.io/eth-cscs/slurm-container-20.11.9:latest
+FROM simonpzh/slurm-20.11.9
 
 RUN zypper install -y\
     fuse3-devel\
