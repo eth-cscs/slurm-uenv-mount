@@ -18,7 +18,7 @@ jobs:
          CPPFLAGS=-I$SLURM_ROOT/include meson setup builddir
          ninja install -C builddir
 
-         echo "required /lib64/libslurm-uenv-mount.so" \
+         echo "required /usr/local/lib64/libslurm-uenv-mount.so" \
          > $SLURM_ROOT/etc/plugstack.conf
 
          whoami
@@ -44,6 +44,15 @@ jobs:
          mksquashfs "$dd" /home/testuser/fs.sqfs -noappend
          EOF
 
+         mkdir -p /user-environment
+
       - name: check
         run: |
           sudo -u testuser sinfo
+
+      - name: mount
+        run: |
+          su testuser -c sh <<\EOF
+          srun --uenv-mount-file=/home/testuser/fs.sqfs stat \
+          /user-environment/test/fileA.txt
+          EOF
