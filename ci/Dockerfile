@@ -1,4 +1,5 @@
-FROM $DOCKER_CONTAINER
+ARG DOCKER_CONTAINER 
+FROM ${DOCKER_CONTAINER}
 #FROM ghcr.io/eth-cscs/slurm-container-20.11.9:latest
 
 RUN zypper install -y\
