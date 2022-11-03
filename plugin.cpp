@@ -123,7 +123,7 @@ int slurm_spank_init(spank_t sp, int ac, char **av) {
 
 int slurm_spank_task_init_privileged(spank_t sp, int ac, char **av) {
   if (args.file) {
-    do_mount(args.mount_point.c_str(), args.file->c_str());
+    return do_mount(args.mount_point.c_str(), args.file->c_str());
   }
 
   return ESPANK_SUCCESS;
