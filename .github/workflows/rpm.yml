@@ -53,8 +53,8 @@ jobs:
         ls
         pwd
     - name: Build Plugin
-      run: CPPFLAGS=-I$SLURM_ROOT/include meson --prefix=$SLURM_ROOT build \
-          && ninja install -C build \
+      run: CPPFLAGS=-I$SLURM_ROOT/include meson --prefix=$SLURM_ROOT /build . \
+          && ninja install -C /build \
           cp $SLURM_ROOT/lib64/libslurm-uenv-mount.so /libslurm-uenv-mount-$SLURM_VERSION.so
     - name: Upload library
       uses: softprops/action-gh-release@v1
