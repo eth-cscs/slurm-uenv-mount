@@ -35,10 +35,9 @@ fi
 
 mksquashfs  "$dd"  $HOME/fs.sqfs -noappend && rm -r "$dd"
 
-
 echo "To test plugin try:"
 echo
-echo "srun -t 10  --uenv-mount-file=0.1.105.tar.gz ls"
+echo "srun -t 10  --uenv-mount-file=fs.sqfs ls"
 echo
 
-exec $SHELL
+exec /entrypoint.sh su  testuser -s /bin/bash
