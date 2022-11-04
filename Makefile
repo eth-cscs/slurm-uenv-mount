@@ -9,18 +9,18 @@ LDFLAGS ?= -Wl,--allow-shlib-undefined -shared -fPIC
 
 
 SLURM_UENV_MOUNT_VERSION := $(shell cat VERSION)
-SLURM_UENV_MOUNT_LDFLAGS =-lmount
+SLURM_UENV_MOUNT_LDFLAGS =
 
 RPMBUILD ?= rpmbuild
 
 all: libslurm-uenv-mount
 
-%.o: %.c
+%.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
-plugin.o,mount.o: VERSION mount.hpp
+plugin.o: VERSION mount.hpp
 
-libslurm-uenv-mount: plugin.o mount.o
+libslurm-uenv-mount: plugin.o
 		$(CXX) $^ $(LDFLAGS)  $(SLURM_UENV_MOUNT_LDFLAGS) -o $@.so
 
 install: libslurm-uenv-mount

@@ -1,4 +1,4 @@
-# slurm-uenv-mount
+# WIP rootless plugin for slurm-uenv-mount
 
 ## Usage
 

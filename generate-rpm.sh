@@ -25,7 +25,7 @@ mkdir -p "${build_path}"
 tar_path="${build_path}/${pkg_name}"
 mkdir -p "${tar_path}"
 
-files=(plugin.cpp mount.hpp mount.cpp Makefile LICENSE VERSION)
+files=(plugin.cpp Makefile LICENSE VERSION)
 
 for f in "${files[@]}"
 do
