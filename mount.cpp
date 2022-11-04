@@ -104,6 +104,7 @@ int do_mount(spank_t spank, const char *mount_point, const char *squashfs_file) 
 
   // set env after success
   spank_setenv(spank, ENV_MOUNT_FILE, squashfs_file, 1);
+  spank_setenv(spank, ENV_MOUNT_POINT, mount_point, 1);
 
   return ESPANK_SUCCESS;
 }
