@@ -44,6 +44,6 @@ RUN useradd testuser
 RUN mkdir -p /home/testuser
 RUN chown testuser /home/testuser
 
-# USER testuser
-#COPY docker/testuser-entrypoint-jpc.sh .
+#USER testuser
+COPY docker/testuser-entrypoint.sh .
 #ENTRYPOINT ./testuser-entrypoint-jpc.sh

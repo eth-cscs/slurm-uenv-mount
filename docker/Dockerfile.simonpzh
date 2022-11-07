@@ -44,6 +44,6 @@ RUN mkdir -p /home/testuser
 RUN chown testuser /home/testuser
 
 # USER testuser
-COPY docker/testuser-entrypoint.sh .
+COPY docker/testuser-entrypoint-simonpzh.sh .
 
-ENTRYPOINT ./testuser-entrypoint.sh
+ENTRYPOINT ./testuser-entrypoint-simonpzh.sh
