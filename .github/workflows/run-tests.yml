@@ -16,8 +16,15 @@ jobs:
       run: echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
     - name: Build Tester Image
       run: make -f ci/Makefile build
-    - name: Run Tester Image
-      run: docker run -t ${{ env.TAG }} srun -t 10  --uenv-mount-file=0.1.105.tar.gz ls 
+    - name: Make test script
+      run: |
+        echo > test.sh <<EOF
+        #!/bin/bash
+        sinfo
+        srun -t 00:00:30 --uenv-mount-file=0.1.105.tar.gz ls
+        EOF
+    - name: Run Tester Image with script
+      run: docker run -t ${{ env.TAG }} bash test.sh
 
       
 #    - name: Upload library
