@@ -11,4 +11,4 @@ build:
 		-t ${TAG} .
 
 run:
-	docker run -it ${TAG}
+	docker run -t ${TAG}
