@@ -9,8 +9,8 @@ pull:
 build:
 	(cd .. &&\
 	docker build \
-		-f docker/Dockerfile.jpc \
+		-f docker/Dockerfile \
 		-t slurm-uenv-mount:latest .)
 
 run:
-	docker run -it slurm-uenv-mount:latest /testuser-entrypoint-jpc.sh
+	docker run -it slurm-uenv-mount:latest /testuser-entrypoint.sh
