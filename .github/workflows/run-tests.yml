@@ -3,17 +3,24 @@ name: Test plugin
 on:
   workflow_dispatch:
 
+env:
+  TAG: slurm-uenv-mount:latest
+  DOCKER_CONTAINER: ghcr.io/eth-cscs/slurm-container-20.11.9:latest
+
 jobs:
   build-test-image:
     runs-on: ubuntu-latest
-    env:
-      DOCKER_CONTAINER: ghcr.io/eth-cscs/slurm-container-20.11.9:latest
     steps:
     - uses: actions/checkout@v3
     - name: Get Docker Image
-      run: echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      run: |
+        echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+        make -f ci/Makefile pull
     - name: Build Tester Image
       run: make -f ci/Makefile build
+    - name: Run Tester Image
+      run: docker run -it ${{ env.TAG }} srun -t 10  --uenv-mount-file=0.1.105.tar.gz ls 
+
       
 #    - name: Upload library
 #      uses: softprops/action-gh-release@v1
