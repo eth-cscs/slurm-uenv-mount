@@ -18,10 +18,11 @@ jobs:
     - name: Build Tester Image
       run: make -f ci/Makefile build
     - name: Run Tester Image with script
-      run: docker run \
-        -e NODE_HW=${{ env.NODE_HW }} \
-        -t ${{ env.TAG }} \
-        ls
+      run: |
+        docker run \
+          -e NODE_HW=${{ env.NODE_HW }} \
+          -t ${{ env.TAG }} \
+          ls
         
       #run: docker run -t ${{ env.TAG }} \
       #  bash -c "\
