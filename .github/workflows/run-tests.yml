@@ -28,19 +28,22 @@ jobs:
         docker run \
           -e NODE_HW=${{ env.NODE_HW }} \
           -t ${{ env.TAG }} \
-          srun -t 00:00:30 --uenv-mount-file=0.1.105.tar.gz ls
-    - name: Run sun, findmnt
-      run: |
-        docker run \
-          -e NODE_HW=${{ env.NODE_HW }} \
-          -t ${{ env.TAG }} \
-          srun -t 00:00:30 --uenv-mount-file=0.1.105.tar.gz findmnt
+          /testuser-entrypoint.sh \
+          srun -t 00:00:30 --uenv-mount-file=fs.sqfs ls
     - name: Run sun, ls /user-environment
       run: |
         docker run \
           -e NODE_HW=${{ env.NODE_HW }} \
           -t ${{ env.TAG }} \
-          srun -t 00:00:30 --uenv-mount-file=0.1.105.tar.gz ls /user-environment
+          /testuser-entrypoint.sh \
+          srun -t 00:00:30 --uenv-mount-file=fs.sqfs ls /user-environment
+    - name: Run sun, findmnt
+      run: |
+        docker run \
+          -e NODE_HW=${{ env.NODE_HW }} \
+          -t ${{ env.TAG }} \
+          /testuser-entrypoint.sh \
+          srun -t 00:00:30 --uenv-mount-file=fs.sqfs findmnt
 
         
       #run: docker run -t ${{ env.TAG }} \
