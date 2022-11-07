@@ -17,7 +17,7 @@ jobs:
     - name: Build Tester Image
       run: make -f ci/Makefile build
     - name: Run Tester Image
-      run: docker run -it ${{ env.TAG }} srun -t 10  --uenv-mount-file=0.1.105.tar.gz ls 
+      run: docker run -t ${{ env.TAG }} srun -t 10  --uenv-mount-file=0.1.105.tar.gz ls 
 
       
 #    - name: Upload library
