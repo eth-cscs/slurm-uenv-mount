@@ -5,29 +5,30 @@ FROM ${DOCKER_CONTAINER}
 RUN zypper install -y\
     fuse3-devel\
     squashfs\
-    python3-pip\
-    mpich\
-    mpich-devel\
-    vim\
-    libmount-devel\
-    wget\
-    gzip\
-    autoconf\
-    automake\
-    libtool \
-    xz-devel\
-    liblz4-devel\
-    libzstd-devel\
-    lzo-devel\
-    zlib-devel\
-    htop\
-    nnn\
-    util-linux\
-    util-linux-systemd\
-    psmisc\
-    psutils\
-    strace \
-    git
+    python3-pip
+#   mpich\
+#   mpich-devel
+#   \
+#   vim\
+#   libmount-devel\
+#   wget\
+#   gzip\
+#   autoconf\
+#   automake\
+#   libtool \
+#   xz-devel\
+#   liblz4-devel\
+#   libzstd-devel\
+#   lzo-devel\
+#   zlib-devel\
+#   htop\
+#   nnn\
+#   util-linux\
+#   util-linux-systemd\
+#   psmisc\
+#   psutils\
+#   strace \
+#   git
 
 # install meson and ninja via pip (packages are too old)
 RUN python3 -m pip install --upgrade pip && python3 -m pip install meson ninja
