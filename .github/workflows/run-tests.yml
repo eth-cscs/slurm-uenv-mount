@@ -6,6 +6,7 @@ on:
 env:
   TAG: slurm-uenv-mount:latest
   DOCKER_CONTAINER: ghcr.io/eth-cscs/slurm-container-20.11.9:latest
+  NODE_HW: CPUS=2
 
 jobs:
   build-test-image:
