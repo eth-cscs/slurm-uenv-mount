@@ -1,6 +1,11 @@
 
 all: build run
 
+login:
+	docker login --username=${USER} ghcr.io --password-stdin
+pull:
+	docker pull ghcr.io/eth-cscs/slurm-container-20.11.9:latest
+
 build:
 	(cd .. &&\
 	docker build \
@@ -8,4 +13,4 @@ build:
 		-t slurm-uenv-mount:latest .)
 
 run:
-	docker run -it slurm-uenv-mount:latest
+	docker run -it slurm-uenv-mount:latest /testuser-entrypoint-jpc.sh
