@@ -18,37 +18,17 @@ jobs:
     - name: Build Tester Image
       run: make -f ci/Makefile build
     - name: Run ls, check node status
+      run: ID=$(docker run --detach --privileged -e NODE_HW=${{ env.NODE_HW }} -t ${{ env.TAG }})
+    - name: Run srun, ls on mount
       run: |
-        docker run \
-          --privileged \
-          -e NODE_HW=${{ env.NODE_HW }} \
-          -t ${{ env.TAG }} \
-          ls
-    - name: Run sun, ls on mount
+        docker exec -it -u testuser ${ID} \
+        /testuser-entrypoint.sh \
+        srun -t 00:00:30 --uenv-mount-file=fs.sqfs ls
+    - name: Run srun, ls /user-environment
       run: |
-        docker run \
-          --privileged \
-          -e NODE_HW=${{ env.NODE_HW }} \
-          -t ${{ env.TAG }} \
-          /testuser-entrypoint.sh \
-          srun -t 00:00:30 --uenv-mount-file=fs.sqfs ls
-    - name: Run sun, ls /user-environment
-      run: |
-        docker run \
-          --privileged \
-          -e NODE_HW=${{ env.NODE_HW }} \
-          -t ${{ env.TAG }} \
-          /testuser-entrypoint.sh \
-          srun -t 00:00:30 --uenv-mount-file=fs.sqfs ls /user-environment
-    - name: Run sun, findmnt
-      run: |
-        docker run \
-          --privileged \
-          -e NODE_HW=${{ env.NODE_HW }} \
-          -t ${{ env.TAG }} \
-          /testuser-entrypoint.sh \
-          srun -t 00:00:30 --uenv-mount-file=fs.sqfs findmnt
-
+        docker exec -it -u testuser ${ID} \
+        /testuser-entrypoint.sh \
+        srun -t 00:00:30 --uenv-mount-file=fs.sqfs ls /user-environment
         
       #run: docker run -t ${{ env.TAG }} \
       #  bash -c "\
