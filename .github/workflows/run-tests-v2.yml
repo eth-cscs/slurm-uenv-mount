@@ -1,32 +1,23 @@
-name: Test plugin
+name: Test plugin v2
 
 on:
+  registry_package:
+    types: [published, updated]
   workflow_dispatch:
 
 env:
-  TAG: ghcr.io/eth-cscs/slurm-uenv-mount:latest
-  DOCKER_CONTAINER: ghcr.io/eth-cscs/slurm-container-20.11.9:latest
+  TAG: ghcr.io/eth-cscs/slurm-uenv-mount-tester-20.11.9:latest
   NODE_HW: CPUS=2
 
 jobs:
-  build-test-image:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-    - name: Get Docker Image
-      run: echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-    - name: Build Tester Image
-      run: make -f ci/Makefile build
-    - name: Push Docker Image
-      run: docker push ${{ env.TAG }}
-      
   run-tests:
     runs-on: ubuntu-latest
-    needs: build-test-image
     steps:
-    - name: Get Docker Image
-      run: echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-    - name: Run ls, check node status
+    - name: Docker Login
+      run: |
+        echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+        echo ${{ env.TAG }}
+    - name: Start Docker Container
       run: |
         ID=$(docker run --detach --privileged -e NODE_HW=${{ env.NODE_HW }} -t ${{ env.TAG }})
         echo "ID=$ID" >> $GITHUB_ENV

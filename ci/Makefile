@@ -1,14 +1,13 @@
-TAG?=slurm-uenv-mount:latest
-DOCKER_CONTAINER?=ghcr.io/eth-cscs/slurm-container-20.11.9:latest
-
-all: build run
+all: build install test
 
 build:
-	DOCKER_BUILDKIT=1 \
-	docker build \
-		-f ci/Dockerfile \
-		--build-arg DOCKER_CONTAINER=${DOCKER_CONTAINER} \
-		-t ${TAG} .
+	CPPFLAGS=-I$(SLURM_ROOT)/include meson setup --prefix=$(SLURM_ROOT) /build . 
 
-run:
-	docker run -t ${TAG}
+install:
+	ninja install -C /build 
+	echo "required $(SLURM_ROOT)/lib64/libslurm-uenv-mount.so" > $(SLURM_ROOT)/etc/plugstack.conf
+
+test:
+	echo "Running tests..."
+	echo "Running tests complete."
+

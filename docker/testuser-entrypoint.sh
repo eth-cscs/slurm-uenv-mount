@@ -2,10 +2,6 @@
 
 # Switch to the user "testuser" to run the rest of the script
 if [ "$UID" = "0" ]; then
-    cat /var/log/slurm/slurmctld.log
-    cat /var/log/slurm/slurmd.nd00001.log
-    cat /var/log/slurm/slurmd.nd00002.log
-    cat /var/log/slurm/slurmd.nd00003.log
     su -l --whitelist-environment=SLURM_ROOT -s /bin/bash testuser $0 $*
     exit
 fi
@@ -40,4 +36,5 @@ echo
 echo "srun -t 10  --uenv-mount-file=fs.sqfs ls"
 echo
 
-exec /entrypoint.sh su  testuser -s /bin/bash
+cd
+exec "$@"
