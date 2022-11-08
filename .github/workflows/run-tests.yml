@@ -23,11 +23,11 @@ jobs:
         echo "ID=$ID" >> $GITHUB_ENV
     - name: Run srun, ls on mount
       run: |
-        docker exec -u testuser ${{ env.ID }} /testuser-entrypoint.sh \
+        docker exec -u testuser ${{ env.ID }} -w /home/testuser /testuser-entrypoint.sh \
           srun -t 00:00:30 --uenv-mount-file=fs.sqfs ls
     - name: Run srun, ls /user-environment
       run: |
-        docker exec -u testuser ${{ env.ID }} /testuser-entrypoint.sh \
+        docker exec -u testuser ${{ env.ID }} -w /home/testuser /testuser-entrypoint.sh \
           srun -t 00:00:30 --uenv-mount-file=fs.sqfs ls /user-environment
         
       #run: docker run -t ${{ env.TAG }} \
