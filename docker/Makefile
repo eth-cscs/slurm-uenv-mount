@@ -1,4 +1,3 @@
-
 all: build run
 
 login:
@@ -13,4 +12,4 @@ build:
 		-t slurm-uenv-mount:latest .)
 
 run:
-	docker run -it slurm-uenv-mount:latest /testuser-entrypoint.sh
+	docker run --name slurm-uenv-mount --rm --privileged -it slurm-uenv-mount:latest /testuser-entrypoint.sh

@@ -7,7 +7,7 @@ name: artifacts
 jobs:
   rpm:
     runs-on: ubuntu-20.04
-    container: simonpzh/slurm-dkr2.suse
+    container: simonpzh/slurm-20.11.9
     # container: registry.suse.com/bci/bci-base:15.3
     steps:
       - name: setup-environment

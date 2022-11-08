@@ -1,4 +1,5 @@
 #include "mount.hpp"
+#include <cstdlib>
 #include <err.h>
 #include <fcntl.h>
 #include <libmount/libmount.h>
@@ -18,7 +19,7 @@ extern "C" {
 
 namespace impl {
 
-int do_mount(const char *mount_point, const char *squashfs_file) {
+int do_mount(spank_t spank, const char *mount_point, const char *squashfs_file) {
   // skip if no mount requested
   if (!squashfs_file) {
     // TODO: log that no action was taken
@@ -100,6 +101,10 @@ int do_mount(const char *mount_point, const char *squashfs_file) {
     slurm_spank_log("%s:%s", mnt_context_get_target(cxt), buf);
     return ESPANK_ERROR;
   }
+
+  // set env after success
+  spank_setenv(spank, ENV_MOUNT_FILE, squashfs_file, 1);
+  spank_setenv(spank, ENV_MOUNT_POINT, mount_point, 1);
 
   return ESPANK_SUCCESS;
 }
