@@ -17,21 +17,18 @@ jobs:
       run: echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
     - name: Build Tester Image
       run: make -f ci/Makefile build
-    - name: Upload image
-      uses: ishworkh/docker-image-artifact-upload@v1
-      with:
-        image: "slurm-uenv-mount:latest"
+    - name: Push Docker Image
+      run: docker push ${{ env.TAG }}
+      
   run-tests:
     runs-on: ubuntu-latest
     needs: build-test-image
     steps:
-    - name: Docker Image Artifact Download
-      uses: ishworkh/docker-image-artifact-download@v1
-      with:
-        image: "slurm-uenv-mount:latest"
+    - name: Get Docker Image
+      run: echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
     - name: Run ls, check node status
       run: |
-        ID=$(docker run --detach --privileged -e NODE_HW=${{ env.NODE_HW }} -t test_image:latest)
+        ID=$(docker run --detach --privileged -e NODE_HW=${{ env.NODE_HW }} -t ${{ env.TAG }})
         echo "ID=$ID" >> $GITHUB_ENV
     - name: Run srun, ls on mount
       run: |
