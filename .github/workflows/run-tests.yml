@@ -18,15 +18,17 @@ jobs:
     - name: Build Tester Image
       run: make -f ci/Makefile build
     - name: Run ls, check node status
-      run: ID=$(docker run --detach --privileged -e NODE_HW=${{ env.NODE_HW }} -t ${{ env.TAG }})
+      run: |
+        ID=$(docker run --detach --privileged -e NODE_HW=${{ env.NODE_HW }} -t ${{ env.TAG }})
+        echo "ID=$ID" >> $GITHUB_ENV
     - name: Run srun, ls on mount
       run: |
-        docker exec -it -u testuser ${ID} \
+        docker exec -it -u testuser ${{ env.ID }} \
         /testuser-entrypoint.sh \
         srun -t 00:00:30 --uenv-mount-file=fs.sqfs ls
     - name: Run srun, ls /user-environment
       run: |
-        docker exec -it -u testuser ${ID} \
+        docker exec -it -u testuser ${{ env.ID }} \
         /testuser-entrypoint.sh \
         srun -t 00:00:30 --uenv-mount-file=fs.sqfs ls /user-environment
         
