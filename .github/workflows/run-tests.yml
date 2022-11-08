@@ -21,15 +21,14 @@ jobs:
       uses: ishworkh/docker-image-artifact-upload@v1
       with:
         image: "test_image:latest"
-
   run-tests:
     runs-on: ubuntu-latest
     needs: build-test-image
+    steps:
     - name: Docker Image Artifact Download
       uses: ishworkh/docker-image-artifact-download@v1
       with:
         image: "test_image:latest"
-    steps:
     - name: Run ls, check node status
       run: |
         ID=$(docker run --detach --privileged -e NODE_HW=${{ env.NODE_HW }} -t test_image:latest)
