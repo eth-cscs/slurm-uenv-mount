@@ -25,6 +25,7 @@ jobs:
   run-tests:
     runs-on: ubuntu-latest
     needs: build-test-image
+    - name: Docker Image Artifact Download
     uses: ishworkh/docker-image-artifact-download@v1
     with:
       image: "test_image:latest"
