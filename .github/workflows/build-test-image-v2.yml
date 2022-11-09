@@ -34,8 +34,8 @@ jobs:
         path: ${{ env.cache_file }}
         key: ${{ runner.os }}-${{ hashFiles('./*', 'ci/*') }}
         
-    - name: Build Image
-      if: steps.cache.outputs.cache-hit != 'true'
+    - if: ${{ steps.cache.outputs.cache-hit != 'true' }}
+      name: Build Image
       run: |
         echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
         docker build \
@@ -47,21 +47,21 @@ jobs:
       env:
         DOCKER_BUILDKIT: 1
       
-    - name: Load Image
-      run: docker load < ${{ env.cache_file }}
+#    - name: Load Image
+#      run: docker load < ${{ env.cache_file }}
    
-    - name: Start Docker Container
-      run: |
-        ID=$(docker run --detach --privileged -e NODE_HW=${{ env.NODE_HW }} -t ${{ env.tag }})
-        echo "ID=$ID" >> $GITHUB_ENV
+#    - name: Start Docker Container
+#      run: |
+#        ID=$(docker run --detach --privileged -e NODE_HW=${{ env.NODE_HW }} -t ${{ env.tag }})
+#        echo "ID=$ID" >> $GITHUB_ENV
       
-    - name: Run Tests
-      run: |
-        ID=$(docker run --privileged -e NODE_HW=${{ env.NODE_HW }} -t ${{ env.tag }} run_tests)
-        docker exec ${{ env.user_flags }} ${{ env.ID }} /testuser-entrypoint.sh make tests
+#    - name: Run Tests
+#      run: |
+#        ID=$(docker run --privileged -e NODE_HW=${{ env.NODE_HW }} -t ${{ env.tag }} run_tests)
+#        docker exec ${{ env.user_flags }} ${{ env.ID }} /testuser-entrypoint.sh make tests
 
 # ------------------------------------------------------------------------
 #  Publish the complete container and the plugin itself
 # ------------------------------------------------------------------------
-    - name: Push Docker Image
-      run: docker push ${{ env.tag }}
+#    - name: Push Docker Image
+#      run: docker push ${{ env.tag }}
