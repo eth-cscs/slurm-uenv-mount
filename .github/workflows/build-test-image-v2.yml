@@ -64,23 +64,20 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      #- run: make build install
-      #- run: make test
+      #- run: make -f ci/Makefile build install
+      #- run: make -f ci/Makefile test
       
-      - name: build RPM package
-        id: rpm
-        uses: naveenrajm7/rpmbuild@master
-        with:
-          spec_file: "slurm-uenv-mount.spec.in"
-
+      - run: make rpm
+      
       - name: Release
         uses: softprops/action-gh-release@v1
         #if: startsWith(github.ref, 'refs/tags/')
         with:
           name: slurm-uenv-mount-${{ matrix.version }}
           files: 
-            ${{ steps.rpm_build.outputs.source_rpm_name }}
-            ${{ steps.rpm.outputs.rpm_dir_path }}/*        
+            /usr/local/lib64/libslurm-uenv-mount.so
+            rpm/SRPMS/*
+            rpm/RPMS/*
 
 #    - name: Load Image
 #      run: docker load < ${{ env.cache_file }}
