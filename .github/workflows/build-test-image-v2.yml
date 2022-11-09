@@ -48,7 +48,7 @@ jobs:
         DOCKER_BUILDKIT: 1
       
     - name: Load Image
-      run: docker load < ${{ cache_file }}
+      run: docker load < ${{ env.cache_file }}
    
     - name: Start Docker Container
       run: |
