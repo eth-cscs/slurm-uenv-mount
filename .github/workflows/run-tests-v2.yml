@@ -1,4 +1,4 @@
-name: Test plugin
+name: Test plugin v2
 
 on:
   workflow_dispatch:
@@ -7,7 +7,8 @@ on:
 
 
 env:
-  TAG: ghcr.io/eth-cscs/slurm-uenv-mount:latest
+  TAG: ${{ env.GITHUB_REF }} 
+  #ghcr.io/eth-cscs/slurm-uenv-mount:latest
   NODE_HW: CPUS=2
 
 jobs:
@@ -15,7 +16,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Docker Login
-      run: echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      run: |
+        echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+        echo ${{ env.GITHUB_REF }} 
+        echo ${{ env.TAG }}
     - name: Start Docker Container
       run: |
         ID=$(docker run --detach --privileged -e NODE_HW=${{ env.NODE_HW }} -t ${{ env.TAG }})
