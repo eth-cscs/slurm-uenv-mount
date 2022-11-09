@@ -74,7 +74,8 @@ jobs:
         #if: startsWith(github.ref, 'refs/tags/')
         with:
           name: slurm-uenv-mount-${{ matrix.version }}
-          files: 
+          tag_name: slurm-uenv-mount-${{ matrix.version }}
+          files: |
             /usr/local/lib64/libslurm-uenv-mount.so
             rpm/SRPMS/*
             rpm/RPMS/*
