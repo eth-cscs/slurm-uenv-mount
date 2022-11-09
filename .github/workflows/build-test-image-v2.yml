@@ -83,6 +83,6 @@ jobs:
           name: slurm-uenv-mount-${{ matrix.version }}
           tag_name: slurm-uenv-mount-${{ matrix.version }}
           files: |
-            /usr/local/lib64/libslurm-uenv-mount.so
+            $SLURM_ROOT/lib64/libslurm-uenv-mount.so
             rpm/SRPMS/*
             rpm/RPMS/*
