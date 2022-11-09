@@ -58,7 +58,7 @@ jobs:
     - name: Push Docker Image
       run: docker push ${{ env.tag }}
     - name: Extract library
-      run: docker cp ${{ env.ID }}:$SLURM_ROOT/lib64/libslurm-uenv-mount.so /libslurm-uenv-mount-$SLURM_VERSION.so
+      run: docker cp ${{ env.tag }}:$SLURM_ROOT/lib64/libslurm-uenv-mount.so /libslurm-uenv-mount-$SLURM_VERSION.so
     - name: Upload library
       uses: softprops/action-gh-release@v1
       with:
