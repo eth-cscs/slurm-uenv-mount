@@ -43,7 +43,7 @@ jobs:
           -t ${{ env.tag }} \
           --build-arg DOCKER_CONTAINER=${{ env.base_tag }} \
           .
-        docker save ${{ env.tag }} | gzip > ${{ cache_file }}
+        docker save ${{ env.tag }} | gzip > ${{ env.cache_file }}
       env:
         DOCKER_BUILDKIT: 1
       
