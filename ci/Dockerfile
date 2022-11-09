@@ -5,7 +5,8 @@ FROM ${DOCKER_CONTAINER}
 RUN zypper install -y\
     fuse3-devel\
     squashfs\
-    python3-pip
+    python3-pip \
+    rpm-build
 #   mpich\
 #   mpich-devel
 #   \
