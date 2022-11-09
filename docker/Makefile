@@ -12,4 +12,13 @@ build:
 		-t slurm-uenv-mount:latest .)
 
 run:
-	docker run --name slurm-uenv-mount --rm --privileged -it slurm-uenv-mount:latest /testuser-entrypoint.sh
+	docker run -it --name slurm-uenv-mount --rm --privileged slurm-uenv-mount:latest /testuser-entrypoint.sh bash
+
+run-detach:
+	docker run --detach -it --name slurm-uenv-mount --rm --privileged slurm-uenv-mount:latest /testuser-entrypoint.sh bash
+
+run-root:
+	docker run -it --name slurm-uenv-mount --rm --privileged slurm-uenv-mount:latest bash
+
+exec:
+	docker exec -it -u testuser slurm-uenv-mount bash -l

@@ -1,0 +1,34 @@
+name: Build Testing Container Package
+
+on:
+  workflow_dispatch:
+  push:
+
+jobs:
+  build-test-image:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        version:
+          - 20.11.9
+          - 21.08.8-2
+          - 22.05.5
+
+    env:
+      base_tag:     ghcr.io/eth-cscs/slurm-container-${{ matrix.version }}:latest
+      tag:          ghcr.io/eth-cscs/slurm-uenv-mount-tester-${{ matrix.version }}:latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Get Docker Image
+      run: echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+    - name: Build Tester Image
+      run: |
+        DOCKER_BUILDKIT=1 docker build \
+          -f ci/Dockerfile \
+          -t ${{ env.tag }} 
+          --build-arg DOCKER_CONTAINER=${{ env.base_tag }} \
+          .
+    - name: Push Docker Image
+      run: docker push ${{ env.tag }}
+
