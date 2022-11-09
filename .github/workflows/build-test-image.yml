@@ -3,6 +3,8 @@ name: Build Testing Container Package
 on:
   workflow_dispatch:
   push:
+    paths:
+    - '!.github/**'
 
 jobs:
   build-test-image:
