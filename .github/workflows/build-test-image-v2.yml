@@ -39,7 +39,7 @@ jobs:
       run: |
         echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
         docker build \
-          -f ci/Dockerfile.test \
+          -f docker/Dockerfile.test \
           -t ${{ env.tag }} \
           --build-arg DOCKER_CONTAINER=${{ env.base_tag }} \
           .
