@@ -74,7 +74,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Compile plugin
-        runs: |
+        run: |
           CPPFLAGS=-I$SLURM_ROOT/include meson setup --prefix=$SLURM_ROOT /build . \
           && ninja install -C /build \
           && echo "required $SLURM_ROOT/lib64/libslurm-uenv-mount.so" > $SLURM_ROOT/etc/plugstack.conf
