@@ -31,7 +31,7 @@ jobs:
     - uses: actions/cache@v3
       id: cache
       with:
-        path: docker.image
+        path: ${{ env.cache_file }}
         key: ${{ runner.os }}-${{ hashFiles('./*', 'ci/*') }}
         
     - name: Build Image
@@ -39,7 +39,7 @@ jobs:
       run: |
         echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
         docker build \
-          -f ci/Dockerfile \
+          -f ci/Dockerfile.test \
           -t ${{ env.tag }} \
           --build-arg DOCKER_CONTAINER=${{ env.base_tag }} \
           .
