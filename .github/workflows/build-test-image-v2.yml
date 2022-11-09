@@ -64,8 +64,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      #- run: make -f ci/Makefile build install
-      #- run: make -f ci/Makefile test
+      - run: make -f ci/Makefile build install
+      - run: make -f ci/Makefile test
       
       - run: make rpm
       
@@ -79,22 +79,3 @@ jobs:
             /usr/local/lib64/libslurm-uenv-mount.so
             rpm/SRPMS/*
             rpm/RPMS/*
-
-#    - name: Load Image
-#      run: docker load < ${{ env.cache_file }}
-   
-#    - name: Start Docker Container
-#      run: |
-#        ID=$(docker run --detach --privileged -e NODE_HW=${{ env.NODE_HW }} -t ${{ env.tag }})
-#        echo "ID=$ID" >> $GITHUB_ENV
-      
-#    - name: Run Tests
-#      run: |
-#        ID=$(docker run --privileged -e NODE_HW=${{ env.NODE_HW }} -t ${{ env.tag }} run_tests)
-#        docker exec ${{ env.user_flags }} ${{ env.ID }} /testuser-entrypoint.sh make tests
-
-# ------------------------------------------------------------------------
-#  Publish the complete container and the plugin itself
-# ------------------------------------------------------------------------
-#    - name: Push Docker Image
-#      run: docker push ${{ env.tag }}
