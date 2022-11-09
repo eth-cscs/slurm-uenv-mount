@@ -1,14 +1,12 @@
 name: Test plugin v2
 
 on:
-  workflow_dispatch:
   registry_package:
-    types: [updated]
-
+    types: [published, updated]
+  workflow_dispatch:
 
 env:
-  TAG: ${{ env.GITHUB_REF }} 
-  #ghcr.io/eth-cscs/slurm-uenv-mount:latest
+  TAG: ghcr.io/eth-cscs/slurm-uenv-mount-tester-20.11.9:latest
   NODE_HW: CPUS=2
 
 jobs:
@@ -18,7 +16,6 @@ jobs:
     - name: Docker Login
       run: |
         echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-        echo ${{ env.GITHUB_REF }} 
         echo ${{ env.TAG }}
     - name: Start Docker Container
       run: |
