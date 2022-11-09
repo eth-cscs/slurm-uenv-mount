@@ -1,0 +1,70 @@
+name: Build Testing Container Package v2
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+    - '!.github/**'
+
+jobs:
+  build-test-image:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        version:
+          - 20.11.9
+          #- 21.08.8-2
+          #- 22.05.5
+
+    env:
+      base_tag:     ghcr.io/eth-cscs/slurm-container-${{ matrix.version }}:latest
+      tag:          ghcr.io/eth-cscs/slurm-uenv-mount-tester-${{ matrix.version }}:latest
+      cache_file:   slurm-uenv-mount-tester-${{ matrix.version }}_latest.tar.gz
+      user_flags:   -u testuser -w /home/testuser
+      NODE_HW:      CPUS=2
+
+    steps:
+# ------------------------------------------------------------------------
+#  Build the host container and plugin
+# ------------------------------------------------------------------------
+    - uses: actions/checkout@v3
+    - uses: actions/cache@v3
+      id: cache
+      with:
+        path: docker.image
+        key: ${{ runner.os }}-${{ hashFiles('./*', 'ci/*') }}
+
+    - name: Build Image
+      if: steps.cache.outputs.cache-hit != 'true'
+      uses: docker/build-push-action@v3
+      with:
+        build-arg: DOCKER_CONTAINER=${{ env.base_tag }}
+        context: .
+        file: ci/Dockerfile
+        push: false
+        tags: ${{ env.tag }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        
+    - name: Cache image
+      if: steps.cache.outputs.cache-hit != 'true'
+      run: docker save ${{ env.tag }} | gzip > ${{ cache_file }}
+      
+    - name: Load Image
+      run: docker load < ${{ cache_file }}
+   
+   - name: Start Docker Container
+      run: |
+        ID=$(docker run --detach --privileged -e NODE_HW=${{ env.NODE_HW }} -t ${{ env.tag }})
+        echo "ID=$ID" >> $GITHUB_ENV
+      
+    - name: Run Tests
+      run: |
+        ID=$(docker run --privileged -e NODE_HW=${{ env.NODE_HW }} -t ${{ env.tag }} run_tests)
+        docker exec ${{ env.user_flags }} ${{ env.ID }} /testuser-entrypoint.sh make tests
+
+# ------------------------------------------------------------------------
+#  Publish the complete container and the plugin itself
+# ------------------------------------------------------------------------
+    - name: Push Docker Image
+      run: docker push ${{ env.tag }}
