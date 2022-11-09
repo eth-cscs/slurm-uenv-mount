@@ -57,13 +57,10 @@ jobs:
         version:
           - 20.11.9
           #- 21.08.8-2
-          #- 22.05.5
-          
-    env:
-      cache_tag:    ghcr.io/eth-cscs/cache_docker/slurm-uenv-mount-tester-${{ matrix.version }}:latest
+          #- 22.05.5    
           
     container:
-      image: ${{ env.cache_tag }}
+      image: ghcr.io/eth-cscs/cache_docker/slurm-uenv-mount-tester-${{ matrix.version }}:latest
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
