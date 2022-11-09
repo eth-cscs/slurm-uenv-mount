@@ -18,35 +18,58 @@ jobs:
 
     env:
       base_tag:     ghcr.io/eth-cscs/slurm-container-${{ matrix.version }}:latest
-      tag:          ghcr.io/eth-cscs/slurm-uenv-mount-tester-${{ matrix.version }}:latest
-      cache_file:   slurm-uenv-mount-tester-${{ matrix.version }}_latest.tar.gz
-      user_flags:   -u testuser -w /home/testuser
-      NODE_HW:      CPUS=2
+      cache_tag:    ghcr.io/eth-cscs/cache_docker/slurm-uenv-mount-tester-${{ matrix.version }}:latest
 
     steps:
-# ------------------------------------------------------------------------
-#  Build the host container and plugin
-# ------------------------------------------------------------------------
     - uses: actions/checkout@v3
-    - uses: actions/cache@v3
-      id: cache
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v1
       with:
-        path: ${{ env.cache_file }}
-        key: ${{ runner.os }}-${{ hashFiles('./*', 'ci/*') }}
-        
-    - if: ${{ steps.cache.outputs.cache-hit != 'true' }}
-      name: Build Image
-      run: |
-        echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-        docker build \
-          -f docker/Dockerfile.test \
-          -t ${{ env.tag }} \
-          --build-arg DOCKER_CONTAINER=${{ env.base_tag }} \
-          .
-        docker save ${{ env.tag }} | gzip > ${{ env.cache_file }}
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Build tester image
+      uses: docker/build-push-action@v3
+      with:
+        context: .
+        file: ci/Dockerfile
+        push: true
+        tags: ${{ env.cache_tag }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        build-args: 
+          DOCKER_CONTAINER=${{ env.base_tag }}
+                
+  run-tests:
+    needs: build-test-image
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        version:
+          - 20.11.9
+          #- 21.08.8-2
+          #- 22.05.5    
+          
+    container:
+      image: ghcr.io/eth-cscs/cache_docker/slurm-uenv-mount-tester-${{ matrix.version }}:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
       env:
-        DOCKER_BUILDKIT: 1
-      
+        NODE_HW: CPUS=2
+      options: --cpus 2
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Compile plugin
+        run: |
+          CPPFLAGS=-I$SLURM_ROOT/include meson setup --prefix=$SLURM_ROOT /build . \
+          && ninja install -C /build \
+          && echo "required $SLURM_ROOT/lib64/libslurm-uenv-mount.so" > $SLURM_ROOT/etc/plugstack.conf
+
 #    - name: Load Image
 #      run: docker load < ${{ env.cache_file }}
    
