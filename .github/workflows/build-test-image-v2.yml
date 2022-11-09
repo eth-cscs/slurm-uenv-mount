@@ -33,22 +33,19 @@ jobs:
       with:
         path: docker.image
         key: ${{ runner.os }}-${{ hashFiles('./*', 'ci/*') }}
-
+        
     - name: Build Image
       if: steps.cache.outputs.cache-hit != 'true'
-      uses: docker/build-push-action@v3
-      with:
-        build-arg: DOCKER_CONTAINER=${{ env.base_tag }}
-        context: .
-        file: ci/Dockerfile
-        push: false
-        tags: ${{ env.tag }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-        
-    - name: Cache image
-      if: steps.cache.outputs.cache-hit != 'true'
-      run: docker save ${{ env.tag }} | gzip > ${{ cache_file }}
+      run: |
+        echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+        docker build \
+          -f ci/Dockerfile \
+          -t ${{ env.tag }} \
+          --build-arg DOCKER_CONTAINER=${{ env.base_tag }} \
+          .
+        docker save ${{ env.tag }} | gzip > ${{ cache_file }}
+      env:
+        DOCKER_BUILDKIT: 1
       
     - name: Load Image
       run: docker load < ${{ cache_file }}
