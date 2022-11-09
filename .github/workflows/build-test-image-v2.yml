@@ -50,7 +50,7 @@ jobs:
     - name: Load Image
       run: docker load < ${{ cache_file }}
    
-   - name: Start Docker Container
+    - name: Start Docker Container
       run: |
         ID=$(docker run --detach --privileged -e NODE_HW=${{ env.NODE_HW }} -t ${{ env.tag }})
         echo "ID=$ID" >> $GITHUB_ENV
