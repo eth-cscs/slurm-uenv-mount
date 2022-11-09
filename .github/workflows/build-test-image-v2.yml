@@ -39,7 +39,7 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
     - name: Build production image
-      uses: docker/build-push-action@v2
+      uses: docker/build-push-action@v3
       with:
         context: .
         file: ci/Dockerfile
@@ -47,6 +47,8 @@ jobs:
         tags: ${{ env.cache_tag }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
+        build-args: 
+          DOCKER_CONTAINER=${{ env.base_tag }}
                 
   run-tests:
     needs: build-test-image
