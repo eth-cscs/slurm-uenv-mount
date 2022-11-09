@@ -3,7 +3,7 @@ name: Test plugin v2
 on:
   workflow_dispatch:
   registry_package:
-    types: [published]
+    types: [updated]
 
 
 env:
