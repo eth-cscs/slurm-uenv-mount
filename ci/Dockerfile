@@ -40,8 +40,6 @@ RUN useradd testuser
 RUN mkdir -p /home/testuser
 RUN chown testuser /home/testuser
 
-COPY ci/testuser-entrypoint.sh .
-COPY ci/Makefile .
 
 # RUN --mount=type=bind,source=../,target=/CODE \
 #     CPPFLAGS=-I$SLURM_ROOT/include meson setup --prefix=$SLURM_ROOT /build /CODE \
