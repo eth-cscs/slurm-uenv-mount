@@ -5,6 +5,7 @@ RUN zypper install -y\
     fuse3-devel\
     squashfs\
     python3-pip\
+    rpm-build\
     mpich\
     mpich-devel\
     vim\
@@ -35,10 +36,10 @@ RUN wget https://github.com/vasi/squashfuse/archive/refs/tags/0.1.105.tar.gz \
     && cd squashfuse-0.1.105 || exit 1 \
     && ./autogen.sh && ./configure --prefix=/usr/local && sudo make install
 
-RUN --mount=type=bind,source=../,target=/CODE \
-    CPPFLAGS=-I$SLURM_ROOT/include meson setup --prefix=$SLURM_ROOT /build /CODE \
-    && ninja install -C /build \
-    && echo "required $SLURM_ROOT/lib64/libslurm-uenv-mount.so" > $SLURM_ROOT/etc/plugstack.conf
+# RUN --mount=type=bind,source=../,target=/CODE \
+#     CPPFLAGS=-I$SLURM_ROOT/include meson setup --prefix=$SLURM_ROOT /build /CODE \
+#     && ninja install -C /build \
+#     && echo "required $SLURM_ROOT/lib64/libslurm-uenv-mount.so" > $SLURM_ROOT/etc/plugstack.conf
 
 RUN mkdir /user-environment
 

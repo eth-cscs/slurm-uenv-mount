@@ -1,5 +1,5 @@
 Name:           slurm-uenv-mount
-Version:        SQMNT_VERSION
+Version:        UENVMNT_VERSION
 Release:        1%{?dist}
 Summary:        SLURM spank plugin to mount squashfs images.
 Prefix:         /usr
@@ -11,16 +11,23 @@ Source0:        %{name}-%{version}.tar.gz
 %define _build_id_links none
 
 %description
-A small setuid binary that mounts a squashfs image in a mount namespace then executes a command as the normal user.
+A SLURM spank plugin to mount squashfs images.
 
 %prep
 %setup -q
 
 %build
-make %{?_smp_mflags}
+make rpm-build PREFIX=%{buildroot}%{_prefix} BUILD_DIR=%{_builddir} %{?_smp_mflags}
 
 %install
-make install prefix=%{_prefix} DESTDIR=%{buildroot}
+make rpm-install PREFIX=%{buildroot}%{_prefix} BUILD_DIR=%{_builddir}
+
+%post
+REQ="required $RPM_INSTALL_PREFIX/%{_lib}/libslurm-uenv-mount.so"
+CNF=$SLURM_ROOT/etc/plugstack.conf
+echo "Appending \"$REQ\" to $CNF"
+echo "$REQ" >> "$CNF"
+#echo "required %{_sysconfdir}/lib64/libslurm-uenv-mount.so" > %{_sysconfdir}/etc/plugstack.conf
 
 %files
 %license LICENSE
