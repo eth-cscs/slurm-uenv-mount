@@ -24,7 +24,7 @@ make rpm-install PREFIX=%{buildroot}%{_prefix} BUILD_DIR=%{_builddir}
 
 %post
 REQ="required $RPM_INSTALL_PREFIX/%{_lib}/libslurm-uenv-mount.so"
-CNF=$SLURM_ROOT/etc/plugstack.conf
+CNF=$SLURM_ROOT/etc/plugstack.conf.d/99-slurm-uenv-mount.conf
 echo "Appending \"$REQ\" to $CNF"
 echo "$REQ" >> "$CNF"
 #echo "required %{_sysconfdir}/lib64/libslurm-uenv-mount.so" > %{_sysconfdir}/etc/plugstack.conf
