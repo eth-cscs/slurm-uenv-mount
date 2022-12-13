@@ -1,10 +1,8 @@
-// #include <cstdio>
-// #include <cstdlib>
-// #include <stdio.h>
+#include <slurm/slurm_errno.h>
 
 #include <optional>
-#include <slurm/slurm_errno.h>
 #include <string>
+#include <tuple>
 
 // // root version
 #include "mount.hpp"
@@ -20,6 +18,7 @@ extern "C" {
 namespace impl {
 int slurm_spank_init(spank_t sp, int ac, char **av);
 int slurm_spank_task_init_privileged(spank_t sp, int ac, char **av);
+int slurm_spank_local_user_init(spank_t sp, int ac, char **av);
 } // namespace impl
 
 //
@@ -44,6 +43,10 @@ int slurm_spank_task_init_privileged(spank_t sp, int ac, char **av) {
   return impl::slurm_spank_task_init_privileged(sp, ac, av);
 }
 
+int slurm_spank_local_user_init(spank_t sp, int ac, char **av) {
+  return impl::slurm_spank_local_user_init(sp, ac, av);
+}
+
 } // extern "C"
 
 //
@@ -58,6 +61,7 @@ struct arg_pack {
 };
 
 static arg_pack args{};
+
 static spank_option mount_point_arg{
     (char *)"uenv-mount-point",
     (char *)"<path>",
@@ -67,7 +71,7 @@ static spank_option mount_point_arg{
     0, // plugin specific value to pass to the callback (unnused)
     [](int val, const char *optarg, int remote) -> int {
       slurm_info("uenv-mount-point: val:%d optarg:%s remote:%d", val, optarg,
-                  remote);
+                 remote);
       if (!optarg) { // is this required if the has_arg flag == 1?
         return ESPANK_BAD_ARG;
       }
@@ -84,7 +88,8 @@ static spank_option file_arg{
     1, // requires an argument
     0, // plugin specific value to pass to the callback (unnused)
     [](int val, const char *optarg, int remote) -> int {
-      slurm_info("uenv-mount-point: val:%d optarg:%s remote:%d", val, optarg, remote);
+      slurm_info("uenv-mount-point: val:%d optarg:%s remote:%d", val, optarg,
+                 remote);
       if (!optarg) { // is this required if the has_arg flag == 1?
         return ESPANK_BAD_ARG;
       }
@@ -101,13 +106,38 @@ static spank_option prolog_arg{
     0, // plugin specific value to pass to the callback (unnused)
     [](int val, const char *optarg, int remote) -> int {
       slurm_info("uenv-mount-point: val:%d optarg:%s remote:%d", val, optarg,
-                  remote);
+                 remote);
       if (optarg) { // is this required if the has_arg flag == 0?
         return ESPANK_BAD_ARG;
       }
       args.run_prologue = false;
       return ESPANK_SUCCESS;
     }};
+
+/// wrapper for spank_getenv
+std::optional<std::string> getenv(spank_t sp, const char *var) {
+  const int len = 1024;
+  char buf[len];
+  spank_err_t ret = spank_getenv(sp, var, buf, len);
+
+  if (ret == ESPANK_ENV_NOEXIST) {
+    return std::nullopt;
+  }
+
+  if (ret == ESPANK_SUCCESS) {
+    return std::string{buf};
+  }
+
+  throw ret;
+}
+
+/// detect if srun/sbatch has been called from an squashfs-run/squashfs-mount
+std::tuple<std::optional<std::string>, std::optional<std::string>>
+get_squashfs_run_env(spank_t sp) {
+  auto env_sqfs_file = getenv(sp, ENV_MOUNT_FILE);
+  auto env_mount_point = getenv(sp, ENV_MOUNT_POINT);
+  return std::make_tuple(env_sqfs_file, env_mount_point);
+}
 
 int slurm_spank_init(spank_t sp, int ac, char **av) {
 
@@ -119,32 +149,26 @@ int slurm_spank_init(spank_t sp, int ac, char **av) {
   return ESPANK_SUCCESS;
 }
 
+int slurm_spank_local_user_init(spank_t sp, int ac, char **av) {
+  return ESPANK_SUCCESS;
+}
+
 int slurm_spank_task_init_privileged(spank_t sp, int ac, char **av) {
-  char env_mount_file[256];
-  char env_mount_point[256];
-
-  // indicates if slurm has been called in active squashfs-mount session.
-  bool called_from_uenv{false};
-  bool mount_point_override{false};
-  if ((spank_getenv(sp, ENV_MOUNT_FILE, env_mount_file, 256) == ESPANK_SUCCESS) &&
-      (spank_getenv(sp, ENV_MOUNT_POINT, env_mount_point, 256) == ESPANK_SUCCESS)) {
-    called_from_uenv = true;
-    mount_point_override = true;
-    // check if mountpoint has been override by `--uenv-mount-point` flag
-    if (spank_option_getopt(sp, &mount_point_arg, av) == ESPANK_SUCCESS) {
-      mount_point_override = true;
-    }
-  }
-
-  if (called_from_uenv) {
-    std::string file = args.file ? *args.file : env_mount_file;
-    std::string path = mount_point_override ? args.mount_point : env_mount_point;
-    return do_mount(sp, path.c_str(), file.c_str());
-  }
-
-  // not called form an active seesion, do nothing if no sqfs file is given.
+  // if --uenv-mount-file is present mount it
   if (args.file) {
-      return do_mount(sp, args.mount_point.c_str(), args.file->c_str());
+    return do_mount(sp, args.mount_point.c_str(), args.file->c_str());
+  }
+
+  // check if sbatch/srun/salloc was called inside squashfs-run tty
+  std::optional<std::string> env_file, env_mount_point;
+  try {
+    std::tie(env_file, env_mount_point) = get_squashfs_run_env(sp);
+  } catch (spank_err_t err) {
+    slurm_error("%s", spank_strerror(err));
+    return err;
+  }
+  if (env_file && env_mount_point) {
+    return do_mount(sp, env_mount_point->c_str(), env_file->c_str());
   }
 
   return ESPANK_SUCCESS;
