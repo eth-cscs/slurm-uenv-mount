@@ -17,17 +17,15 @@ A SLURM spank plugin to mount squashfs images.
 %setup -q
 
 %build
-make rpm-build PREFIX=%{buildroot}%{_prefix} BUILD_DIR=%{_builddir} %{?_smp_mflags}
+make %{?_smp_mflags}
 
 %install
-make rpm-install PREFIX=%{buildroot}%{_prefix} BUILD_DIR=%{_builddir}
+make install prefix=%{_prefix} DESTDIR=%{buildroot}
 
 %post
 REQ="required $RPM_INSTALL_PREFIX/%{_lib}/libslurm-uenv-mount.so"
 CNF=$SLURM_ROOT/etc/plugstack.conf.d/99-slurm-uenv-mount.conf
-echo "Appending \"$REQ\" to $CNF"
 echo "$REQ" >> "$CNF"
-#echo "required %{_sysconfdir}/lib64/libslurm-uenv-mount.so" > %{_sysconfdir}/etc/plugstack.conf
 
 %files
 %license LICENSE
