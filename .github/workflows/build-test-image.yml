@@ -64,13 +64,44 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - run: |
+      - run:
           make install
-          echo "required /usr/local/lib64/libslurm-uenv-mount.so >> /etc/plugstack.conf"
-      - name: Delete old release assets
-        uses: mknejp/delete-release-assets@v1
-        with:
-          token: ${{ github.token }}
-          tag: slurm-uenv-mount-${{ matrix.version }}
-          assets: '*'
-        continue-on-error: true
+      - run:
+          echo "required /usr/lib64/libslurm-uenv-mount.so" > /etc/slurm/plugstack.conf
+      - run: |
+          /entrypoint.sh
+          sinfo
+      - run: |
+          (
+          cd /home/testuser
+          su testuser -c sh <<\EOF
+            dd=$(mktemp -d)
+            (
+                umask 022
+                cd "$dd" || exit
+                mkdir test
+                echo "This is file A" >> test/fileA.txt
+                mkdir -p test/testdir
+            )
+
+            mksquashfs  "$dd"  /home/testuser/fs.sqfs -noappend && rm -r "$dd"
+
+            dd=$(mktemp -d)
+            (
+                umask 022
+                cd "$dd" || exit
+                mkdir test
+                echo "This is file A" >> test/fileB.txt
+                mkdir -p test/testdir
+            )
+            mksquashfs  "$dd"  /home/testuser/fs2.sqfs -noappend && rm -r "$dd"
+          EOF
+          )
+      - run: |
+          su testuser -c sh <<\EOF
+          sbatch ci/tests/test.sbatch
+          EOF
+      - run: |
+          su testuser -c sh <<\EOF
+          ci/tests/squashfs-run.sh
+          EOF
