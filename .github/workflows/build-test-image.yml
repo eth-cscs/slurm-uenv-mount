@@ -71,35 +71,11 @@ jobs:
       - run: |
           /entrypoint.sh
           sinfo
-      - run: |
-          (
-          cd /home/testuser
-          su testuser -c sh <<\EOF
-            dd=$(mktemp -d)
-            (
-                umask 022
-                cd "$dd" || exit
-                mkdir test
-                echo "This is file A" >> test/fileA.txt
-                mkdir -p test/testdir
-            )
-
-            mksquashfs  "$dd"  /home/testuser/fs.sqfs -noappend && rm -r "$dd"
-
-            dd=$(mktemp -d)
-            (
-                umask 022
-                cd "$dd" || exit
-                mkdir test
-                echo "This is file A" >> test/fileB.txt
-                mkdir -p test/testdir
-            )
-            mksquashfs  "$dd"  /home/testuser/fs2.sqfs -noappend && rm -r "$dd"
-          EOF
-          )
+          # setup /home/testuser/fs.sqfs, /home/testuser/fs2.sqfs
+          ci/create-dummy-sqfs.sh
       - run: |
           su testuser -c sh <<\EOF
-          sbatch ci/tests/test.sbatch
+          sbatch --wait ci/tests/test.sbatch
           EOF
       - run: |
           su testuser -c sh <<\EOF

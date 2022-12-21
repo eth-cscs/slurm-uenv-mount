@@ -48,6 +48,9 @@ RUN useradd testuser
 RUN mkdir -p /home/testuser
 RUN chown testuser /home/testuser
 
+RUN --mount=type=bind,source=./,target=/CODE \
+    /CODE/ci/create-dummy-sqfs.sh
+
 # USER testuser
 COPY docker/testuser-entrypoint.sh .
 
