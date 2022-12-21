@@ -1,2 +1,0 @@
-FROM ghcr.io/eth-cscs/slurm-container-20.11.9:latest
-
