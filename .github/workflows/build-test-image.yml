@@ -13,57 +13,64 @@ jobs:
       matrix:
         version:
           - 20.11.9
-          #- 21.08.8-2
-          #- 22.05.5
+          - 21.08.8-2
+          - 22.05.5
 
     env:
       base_tag:     ghcr.io/eth-cscs/slurm-container-${{ matrix.version }}:latest
-      tag:          ghcr.io/eth-cscs/slurm-uenv-mount-tester-${{ matrix.version }}:latest
-      user_flags:   -u testuser -w /home/testuser
-      NODE_HW:      CPUS=2
-
+      cache_tag:    ghcr.io/eth-cscs/cache_docker/slurm-uenv-mount-tester-${{ matrix.version }}:latest
 
     steps:
-# ------------------------------------------------------------------------
-#  Build the host container and plugin
-# ------------------------------------------------------------------------
     - uses: actions/checkout@v3
-    - name: Get Docker Image
-      run: echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-    - name: Build Tester Image
-      run: |
-        DOCKER_BUILDKIT=1 docker build \
-          -f ci/Dockerfile \
-          -t ${{ env.tag }} \
-          --build-arg DOCKER_CONTAINER=${{ env.base_tag }} \
-          .
-# ------------------------------------------------------------------------
-#  Test Plugin
-# ------------------------------------------------------------------------
-    - name: Start Docker Container
-      run: |
-        ID=$(docker run --detach --privileged -e NODE_HW=${{ env.NODE_HW }} -t ${{ env.tag }})
-        echo "ID=$ID" >> $GITHUB_ENV
-    - name: Run srun, ls on mount
-      run: |
-        docker exec ${{ env.user_flags }} ${{ env.ID }} /testuser-entrypoint.sh \
-          srun -t 00:00:30 --uenv-mount-file=fs.sqfs ls
-    - name: Run srun, ls /user-environment
-      run: |
-        docker exec ${{ env.user_flags }} ${{ env.ID }} /testuser-entrypoint.sh \
-          srun -t 00:00:30 --uenv-mount-file=fs.sqfs ls /user-environment
-# ------------------------------------------------------------------------
-#  Publish the complete container and the plugin itself
-# ------------------------------------------------------------------------
-    - name: Push Docker Image
-      run: docker push ${{ env.tag }}
-    - name: Extract library
-      run: |
-        SLURM_ROOT=$(docker inspect ${{ env.tag }} | jq -r '.[].Config.Env[]|select(match("^SLURM_ROOT"))|.[index("=")+1:]')
-        docker cp ${{ env.tag }}:$SLURM_ROOT/lib64/libslurm-uenv-mount.so /libslurm-uenv-mount-${{ matrix.version }}.so
-    - name: Upload library
-      uses: softprops/action-gh-release@v1
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v2
       with:
-        name: libslurm-uenv-mount-${{ matrix.version }}.so
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Build tester image
+      uses: docker/build-push-action@v3
+      with:
+        context: .
+        file: ci/Dockerfile
+        push: true
+        tags: ${{ env.cache_tag }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        build-args:
+          DOCKER_CONTAINER=${{ env.base_tag }}
 
+  build-plugin:
+    needs: build-test-image
+    runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        version:
+          - 20.11.9
+          - 21.08.8-2
+          - 22.05.5
+
+    container:
+      image: ghcr.io/eth-cscs/cache_docker/slurm-uenv-mount-tester-${{ matrix.version }}:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+      env:
+        NODE_HW: CPUS=2
+      options: --cpus 2 --privileged
+
+    steps:
+      - uses: actions/checkout@v3
+      - run: |
+          make install
+          echo "required /usr/local/lib64/libslurm-uenv-mount.so >> /etc/plugstack.conf"
+      - name: Delete old release assets
+        uses: mknejp/delete-release-assets@v1
+        with:
+          token: ${{ github.token }}
+          tag: slurm-uenv-mount-${{ matrix.version }}
+          assets: '*'
+        continue-on-error: true
