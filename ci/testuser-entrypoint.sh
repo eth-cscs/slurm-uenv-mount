@@ -15,7 +15,6 @@ export MANPATH=$SLURM_ROOT/share/man:$PATH
 
 
 dd=$(mktemp -d)
-
 (
     umask 022
     cd "$dd" || exit
@@ -24,11 +23,18 @@ dd=$(mktemp -d)
     mkdir -p test/testdir
 )
 
-if command -v tree
-then
-    tree "$dd"
-fi
-
 mksquashfs  "$dd"  $HOME/fs.sqfs -noappend && rm -r "$dd"
+
+dd=$(mktemp -d)
+(
+    umask 022
+    cd "$dd" || exit
+    mkdir test
+    echo "This is file A" >> test/fileB.txt
+    mkdir -p test/testdir
+)
+mksquashfs  "$dd"  $HOME/fs2.sqfs -noappend && rm -r "$dd"
+
+
 
 exec "$@"
