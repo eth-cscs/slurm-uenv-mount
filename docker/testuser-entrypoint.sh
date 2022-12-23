@@ -11,7 +11,7 @@ echo
 
 if [ $# -gt 0 ];
 then
-   exec /entrypoint.sh su testuser -s /bin/bash -c "$@"
+   exec /entrypoint.sh su testuser -Ps /bin/bash -c "$*"
 else
     exec /entrypoint.sh su testuser -s /bin/bash
 fi
