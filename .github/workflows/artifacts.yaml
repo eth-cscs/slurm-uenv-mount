@@ -32,12 +32,28 @@ jobs:
           sudo rpmbuild --rebuild "$(find rpm/SRPMS -name '*.rpm' -type f -print -quit)" --define "_topdir $(pwd)/rpm"
           sudo rpm --install "$(find rpm/RPMS -name '*.rpm' -type f -print -quit)"
           find rpm -name '*.rpm' -type f -exec cp {} . \;
-
-      - name: Release
-        uses: softprops/action-gh-release@v1
-        #if: startsWith(github.ref, 'refs/tags/')
+      - name: upload-rpm
+        uses: actions/upload-artifact@v3
         with:
-          name: slurm-uenv-mount-${{ matrix.version }}
-          tag_name: slurm-uenv-mount-${{ matrix.version }}
-          files: |
-            *.rpm
+          name: rpm-${{ matrix.version }}
+          path: '*.rpm'
+
+  tag-release:
+    runs-on: ubuntu-20.04
+    strategy:
+        matrix:
+          version:
+            - 20.11.9
+            # - 21.08.8-2
+            # - 22.05.5
+    needs: rpm
+    steps:
+      - name: download-artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: rpm-${{ matrix.version }}
+      - name: release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: '*.rpm'
