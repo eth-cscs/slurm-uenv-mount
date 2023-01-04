@@ -1,18 +1,29 @@
 # Docker container to run the plugin for development purposes
 
-Build a container named `slurm-uenv-mount`:
+Build the container:
 ```bash
-./build.sh
+docker compose build
 ```
 
-Run the container as unprivilged user (`testuser`):
+Start the container (named `slurm-uenv-mount`):
 ```bash
-docker run --name slurm-uenv-mount --rm --privileged -it slurm-uenv-mount bash
+docker compose up -d
+```
+- Runs container in the background.
+- The source tree is mounted read-only under `/slurm-uenv-mount`.
+- Interact with the container using `docker exec -it slurm-uenv-mount ...`.
+
+Launch a shell in the container as unprivileged user:
+```bash
+docker exec -u testuser -w /home/testuser -it slurm-uenv-mount bash
 ```
 
- `run.sh` can be used as a shortcut:
+Run tests:
 ```bash
-./run.sh bash
+docker exec -u testuser -w /home/testuser -i slurm-uenv-mount bash < run-tests.sh
 ```
 
-`./rebuild.sh` rebuilds the plugin in the container from the local source tree (this assumes the container was stareted via `./run.sh`).
+When making changes in the local source tree, the plugin can be rebuilt/resintalled in the running container (`docker compose up`) via:
+```bash
+./rebuild.sh
+```
