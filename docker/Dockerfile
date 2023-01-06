@@ -1,5 +1,7 @@
 # FROM simonpzh/suse-slurm:20.11.9
-FROM ghcr.io/eth-cscs/slurm-container-20.11.9:latest
+#FROM ghcr.io/eth-cscs/slurm-container-20.11.9:latest
+ARG DOCKER_CONTAINER=ghcr.io/eth-cscs/slurm-container-20.11.9:latest
+FROM ${DOCKER_CONTAINER}
 
 RUN zypper install -y\
     fuse3-devel\
