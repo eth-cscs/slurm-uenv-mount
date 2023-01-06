@@ -9,9 +9,9 @@ if [ ! -z "$CONTAINER" ]; then
     BUILD_ARGS+="--build-arg DOCKER_CONTAINER=${CONTAINER}"
 fi
 
-SOURCE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../"; pwd)"
+SOURCE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")"/../; pwd)"
 
 (
-    cd ${SOURCE_DIR} || exit 1
-    BUILDKIT_PROGRESS=plain docker build . -f "docker/Dockerfile" ${BUILD_ARGS} --progress=plain -t $TAG
+    cd ../ || exit 1
+    BUILDKIT_PROGRESS=plain docker build . -f "${SOURCE_DIR}/Dockerfile" ${BUILD_ARGS} --progress=plain -t $TAG
 )
