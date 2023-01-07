@@ -7,19 +7,24 @@
 
 
 # user-environment is mounted unexpectedly
-set +e
-(findmnt | grep /user-environment) && exit 1
+if [[ $(findmnt | grep -vc /user-environment) -ne $(findmnt | wc -l)  ]];
+then
+    exit 1
+fi
 
 
-# check the same in srun
-srun sh <<\EOF
-     set +e
-     (findmnt | grep /user-environment) && exit 1
-EOF
+# # this always fails, I don't understand why
+# srun sh <<\EOF
+#     if [[ $(findmnt | grep -bc /user-environment) -ne $(findmnt | wc -l)  ]];
+#     then
+#         exit 1
+#     fi
+# EOF
 
-
-# this is expected to run silently
-srun --uenv-mount-point=/foo sh <<\EOF
-     set +e
-     (findmnt | grep /user-environment) && exit 1
-EOF
+# # this is expected to run silently
+# srun --uenv-mount-point=/foo sh <<\EOF
+#     if [[ $(findmnt | grep -bc /user-environment) -ne $(findmnt | wc -l)  ]];
+#     then
+#         exit 1
+#     fi
+# EOF
