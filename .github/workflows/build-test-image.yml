@@ -43,7 +43,7 @@ jobs:
         build-args:
           DOCKER_CONTAINER=${{ env.base_tag }}
 
-  build-plugin:
+  build-and-test:
     needs: build-test-image
     runs-on: ubuntu-latest
 
@@ -70,15 +70,31 @@ jobs:
       - run:
           echo "required /usr/lib64/libslurm-uenv-mount.so" > /etc/slurm/plugstack.conf
       - run: |
+          # initialization
           /entrypoint.sh
           sinfo
-          # setup /home/testuser/fs.sqfs, /home/testuser/fs2.sqfs
           ci/create-dummy-sqfs.sh
       - run: |
           su testuser -c sh <<\EOF
-          sbatch --wait ci/tests/test.sbatch
+          sbatch --wait ci/tests/plain.sbatch || exit 1
+          EOF
+      - run: |
+          su testuser -c sh <<\EOF
+          sbatch --wait ci/tests/test.sbatch || exit 1
           EOF
       - run: |
           su testuser -c sh <<\EOF
           ci/tests/squashfs-run.sh
+          EOF
+      - run: |
+          su testuser -c sh <<\EOF
+          sbatch --wait ci/tests/test-override-flags.sbatch || exit 1
+          EOF
+      - run: |
+          su testuser -c sh <<\EOF
+          ci/tests/invalid-image.sh
+          EOF
+      - run: |
+          su testuser -c sh <<\EOF
+          ci/tests/invalid-mount-point.sh
           EOF
