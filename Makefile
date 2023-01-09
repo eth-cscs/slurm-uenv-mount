@@ -32,7 +32,7 @@ all: libslurm-uenv-mount.so
 libslurm-uenv-mount.so: $(OBJFILES)
 		$(CXX) $^ $(LDFLAGS) $(SLURM_UENV_MOUNT_LDFLAGS) -o $@
 
-install: libslurm-uenv-mount
+install: libslurm-uenv-mount.so
 	mkdir -p $(DESTDIR)$(libdir)
 	cp -p libslurm-uenv-mount.so $(DESTDIR)$(libdir)
 
