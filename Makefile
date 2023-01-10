@@ -1,8 +1,8 @@
 .PHONY: all rpm install clean
 
-prefix = /usr
-exec_prefix = $(prefix)
-libdir = $(exec_prefix)/lib64
+prefix ?= /usr
+exec_prefix ?= $(prefix)
+libdir ?= $(exec_prefix)/lib64
 
 CXXFLAGS ?= -Os -Wall -Wpedantic -fPIC -std=c++17 -shared
 LDFLAGS ?= -Wl,--allow-shlib-undefined -shared -fPIC
@@ -21,7 +21,7 @@ SLURM_UENV_MOUNT_VERSION := $(shell sed 's/-/~/' $(SRCDIR)VERSION)
 SLURM_UENV_MOUNT_LDFLAGS =-lmount
 
 RPMPKG=slurm-uenv-mount-${SLURM_UENV_MOUNT_VERSION}
-RPMBUILDDIR=rpm
+RPMBUILDDIR?=rpm
 RPMBUILD ?= rpmbuild
 
 all: libslurm-uenv-mount.so
