@@ -29,17 +29,10 @@ RUN zypper install -y\
     psutils\
     strace
 
-# install meson and ninja via pip (packages are too old)
-#RUN python3 -m pip install --upgrade pip && python3 -m pip install meson ninja
 RUN wget https://github.com/vasi/squashfuse/archive/refs/tags/0.1.105.tar.gz \
     && tar xf 0.1.105.tar.gz \
     && cd squashfuse-0.1.105 || exit 1 \
     && ./autogen.sh && ./configure --prefix=/usr/local && sudo make install
-
-#RUN --mount=type=bind,source=./,target=/CODE \
-#    meson setup --prefix=/usr /build /CODE &&\
-#    ninja install  -C /build  &&\
-#    echo "required /usr/lib64/libslurm-uenv-mount.so" > /etc/slurm/plugstack.conf
 
 RUN --mount=type=bind,source=./,target=/slurm-uenv-mount \
     mkdir /slurm-uenv-mount-BUILD && cd /slurm-uenv-mount-BUILD \
