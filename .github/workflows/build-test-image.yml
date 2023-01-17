@@ -75,26 +75,32 @@ jobs:
           sinfo
           ci/create-dummy-sqfs.sh
       - run: |
+          # verify that nothing is mounted when no --uenv-mount-file flag is given
           su testuser -c sh <<\EOF
           sbatch --wait ci/tests/plain.sbatch || exit 1
           EOF
       - run: |
+          # run sbatch with --uenv-mount-point/file flags and verify image is mounted as expected
           su testuser -c sh <<\EOF
           sbatch --wait ci/tests/test.sbatch || exit 1
           EOF
       - run: |
+          # imitate squashfs-run session
           su testuser -c sh <<\EOF
           ci/tests/squashfs-run.sh
           EOF
       - run: |
+          # override --uenv-mount-file/point flags from sbatch in subsequent srun commands
           su testuser -c sh <<\EOF
           sbatch --wait ci/tests/test-override-flags.sbatch || exit 1
           EOF
       - run: |
+          # verify that attempting to mount an non-existent image fails
           su testuser -c sh <<\EOF
           ci/tests/invalid-image.sh
           EOF
       - run: |
+          # verify attempting to mount under an non-existent path fails
           su testuser -c sh <<\EOF
           ci/tests/invalid-mount-point.sh
           EOF
