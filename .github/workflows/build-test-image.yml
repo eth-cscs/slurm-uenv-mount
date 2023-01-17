@@ -104,3 +104,8 @@ jobs:
           su testuser -c sh <<\EOF
           ci/tests/invalid-mount-point.sh
           EOF
+      - run: |
+          # --uenv-mount-point=.... without --uenv-mount-file must return an error
+          su testuser -c sh <<\EOF
+          ci/tests/uenv-mount-point-alone.sh
+          EOF
