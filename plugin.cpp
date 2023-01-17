@@ -136,10 +136,22 @@ int slurm_spank_init(spank_t sp, int ac, char **av) {
       return status;
     }
   }
+
   return ESPANK_SUCCESS;
 }
 
 int slurm_spank_local_user_init(spank_t sp, int ac, char **av) {
+  if (!args.file) {
+    // ensure that --uenv-mount-point is not present, getopt is called here
+    // because it is not allowed to be called in `spank_init`.
+    char** tmp{nullptr};
+    spank_err_t ret = spank_option_getopt(sp, &mount_point_arg, tmp);
+    if (ret != ESPANK_ERROR) {
+      slurm_error("--uenv-mount-point is only allowed to be used together with --uenv-mount-file.");
+      return ESPANK_ERROR;
+    }
+  }
+
   return ESPANK_SUCCESS;
 }
 
