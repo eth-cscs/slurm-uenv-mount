@@ -1,5 +1,3 @@
-#include <slurm/slurm_errno.h>
-
 #include <optional>
 #include <string>
 #include <tuple>
@@ -9,6 +7,7 @@
 
 extern "C" {
 #include <slurm/spank.h>
+#include <slurm/slurm_errno.h>
 }
 
 //
