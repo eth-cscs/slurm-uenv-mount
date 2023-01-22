@@ -6,7 +6,7 @@ set -x
 
 echo "To test plugin try:"
 echo
-echo "srun -t 10  --uenv-mount-file=fs.sqfs ls"
+echo "srun -t 10  --uenv-file=fs.sqfs ls"
 echo
 
 if [ $# -gt 0 ];

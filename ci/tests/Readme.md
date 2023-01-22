@@ -8,4 +8,4 @@
 | `squashfs-run.sh`            | env variables from squashfs-run are taken into account             |
 | `test-override-flags.sbatch` | override flags take precedence                                     |
 | `test.sbatch`                | image is mounted under correct mount point / content is accessible |
-| `uenv-mount-point-alone.sh`  | plugin fails when  --uenv-mount-point is specified alone           |
+| `uenv-mount-point-alone.sh`  | plugin fails when  --uenv-mount is specified alone                 |

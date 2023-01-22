@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --ntasks=2
-#SBATCH --uenv-mount-file=/home/testuser/fs.sqfs
+#SBATCH --uenv-file=/home/testuser/fs.sqfs
 #SBATCH --output=/tmp/stdout.txt
 #SBATCH --error=/tmp/stderr.txt
 

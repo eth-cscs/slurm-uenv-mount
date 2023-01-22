@@ -75,12 +75,12 @@ jobs:
           sinfo
           ci/create-dummy-sqfs.sh
       - run: |
-          # verify that nothing is mounted when no --uenv-mount-file flag is given
+          # verify that nothing is mounted when no --uenv-file flag is given
           su testuser -c sh <<\EOF
           sbatch --wait ci/tests/plain.sbatch || exit 1
           EOF
       - run: |
-          # run sbatch with --uenv-mount-point/file flags and verify image is mounted as expected
+          # run sbatch with --uenv-mount/file flags and verify image is mounted as expected
           su testuser -c sh <<\EOF
           sbatch --wait ci/tests/test.sbatch || exit 1
           EOF
@@ -90,7 +90,7 @@ jobs:
           ci/tests/squashfs-run.sh
           EOF
       - run: |
-          # override --uenv-mount-file/point flags from sbatch in subsequent srun commands
+          # override --uenv-file/mount flags from sbatch in subsequent srun commands
           su testuser -c sh <<\EOF
           sbatch --wait ci/tests/test-override-flags.sbatch || exit 1
           EOF
@@ -105,7 +105,7 @@ jobs:
           ci/tests/invalid-mount-point.sh
           EOF
       - run: |
-          # --uenv-mount-point=.... without --uenv-mount-file must return an error
+          # --uenv-mount=.... without --uenv-mount-file must return an error
           su testuser -c sh <<\EOF
           ci/tests/uenv-mount-point-alone.sh
           EOF

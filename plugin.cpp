@@ -62,14 +62,14 @@ struct arg_pack {
 static arg_pack args{};
 
 static spank_option mount_point_arg{
-    (char *)"uenv-mount-point",
+    (char *)"uenv-mount",
     (char *)"<path>",
     (char *)"path whence the environment is mounted: default "
             "/user-environment",
     1, // requires an argument
     0, // plugin specific value to pass to the callback (unnused)
     [](int val, const char *optarg, int remote) -> int {
-      slurm_info("uenv-mount-point: val:%d optarg:%s remote:%d", val, optarg,
+      slurm_info("uenv-mount: val:%d optarg:%s remote:%d", val, optarg,
                  remote);
       // todo: parse string to validate that the path exists
       // todo: parse string to validate that it is a valid and allowed path
@@ -78,13 +78,13 @@ static spank_option mount_point_arg{
     }};
 
 static spank_option file_arg{
-    (char *)"uenv-mount-file",
+    (char *)"uenv-file",
     (char *)"<path>",
     (char *)"the squashfs file with the image to mount:",
     1, // requires an argument
     0, // plugin specific value to pass to the callback (unnused)
     [](int val, const char *optarg, int remote) -> int {
-      slurm_info("uenv-mount-point: val:%d optarg:%s remote:%d", val, optarg,
+      slurm_info("uenv-mount: val:%d optarg:%s remote:%d", val, optarg,
                  remote);
       // check that file exists happens in do_mount
       args.file = std::string{optarg};
@@ -98,7 +98,7 @@ static spank_option prolog_arg{
     0, // takes an argument
     0, // plugin specific value to pass to the callback (unnused)
     [](int val, const char *optarg, int remote) -> int {
-      slurm_info("uenv-mount-point: val:%d optarg:%s remote:%d", val, optarg,
+      slurm_info("uenv-mount: val:%d optarg:%s remote:%d", val, optarg,
                  remote);
       args.run_prologue = false;
       return ESPANK_SUCCESS;
@@ -142,12 +142,12 @@ int slurm_spank_init(spank_t sp, int ac, char **av) {
 
 int slurm_spank_local_user_init(spank_t sp, int ac, char **av) {
   if (!args.file) {
-    // ensure that --uenv-mount-point is not present, getopt is called here
+    // ensure that --uenv-mount is not present, getopt is called here
     // because it is not allowed to be called in `spank_init`.
     char** tmp{nullptr};
     spank_err_t ret = spank_option_getopt(sp, &mount_point_arg, tmp);
     if (ret != ESPANK_ERROR) {
-      slurm_error("--uenv-mount-point is only allowed to be used together with --uenv-mount-file.");
+      slurm_error("--uenv-mount is only allowed to be used together with --uenv-file.");
       return ESPANK_ERROR;
     }
   }
@@ -156,7 +156,7 @@ int slurm_spank_local_user_init(spank_t sp, int ac, char **av) {
 }
 
 int slurm_spank_task_init_privileged(spank_t sp, int ac, char **av) {
-  // if --uenv-mount-file is present mount it
+  // if --uenv-file is present mount it
   if (args.file) {
     return do_mount(sp, args.mount_point.c_str(), args.file->c_str());
   }
