@@ -43,7 +43,7 @@ jobs:
         build-args:
           DOCKER_CONTAINER=${{ env.base_tag }}
 
-  build-plugin:
+  build-and-test:
     needs: build-test-image
     runs-on: ubuntu-latest
 
@@ -70,15 +70,42 @@ jobs:
       - run:
           echo "required /usr/lib64/libslurm-uenv-mount.so" > /etc/slurm/plugstack.conf
       - run: |
+          # initialization
           /entrypoint.sh
           sinfo
-          # setup /home/testuser/fs.sqfs, /home/testuser/fs2.sqfs
           ci/create-dummy-sqfs.sh
       - run: |
+          # verify that nothing is mounted when no --uenv-file flag is given
           su testuser -c sh <<\EOF
-          sbatch --wait ci/tests/test.sbatch
+          sbatch --wait ci/tests/plain.sbatch || exit 1
           EOF
       - run: |
+          # run sbatch with --uenv-mount/file flags and verify image is mounted as expected
+          su testuser -c sh <<\EOF
+          sbatch --wait ci/tests/test.sbatch || exit 1
+          EOF
+      - run: |
+          # imitate squashfs-run session
           su testuser -c sh <<\EOF
           ci/tests/squashfs-run.sh
+          EOF
+      - run: |
+          # override --uenv-file/mount flags from sbatch in subsequent srun commands
+          su testuser -c sh <<\EOF
+          sbatch --wait ci/tests/test-override-flags.sbatch || exit 1
+          EOF
+      - run: |
+          # verify that attempting to mount an non-existent image fails
+          su testuser -c sh <<\EOF
+          ci/tests/invalid-image.sh
+          EOF
+      - run: |
+          # verify attempting to mount under an non-existent path fails
+          su testuser -c sh <<\EOF
+          ci/tests/invalid-mount-point.sh
+          EOF
+      - run: |
+          # --uenv-mount=.... without --uenv-mount-file must return an error
+          su testuser -c sh <<\EOF
+          ci/tests/uenv-mount-point-alone.sh
           EOF

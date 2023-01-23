@@ -3,13 +3,13 @@
 To test a slurm plugin a running slurm server and clients are needed. Rather
 than require such a setup on the development platform itself, the CSCS Slurm
 Docker container can be used. This provides a single server instance and
-multiple client daemons. 
+multiple client daemons.
 
 Pull the container that runs a slurm server and clients. The container is
 hosted on GitHub Packages. To access this server you will need a GitHub Access
 Token (https://github.com/settings/tokens) with at least the read:packages scope.
 ```bash
-docker login --username=<USERNAME> ghcr.io 
+docker login --username=<USERNAME> ghcr.io
 ```
 When using GitHub Packages, `USERNAME` can be any text. The password is the GitHub Token.
 
@@ -49,7 +49,7 @@ Alternatively, `run.sh` can be used as a shortcut:
 # Rebuilding the plugin
 
 The `run.sh` script mounts the source code directory as a read-only volume inside the container under `/slurm-uenv-mount`.
-This allows the source code to be modified outside of the container, but rebuilt and tested in a slurm environment. 
+This allows the source code to be modified outside of the container, but rebuilt and tested in a slurm environment.
 To rebuild the plugin, first create a build directory in the `testuser` home inside a running container.
 Then run `make` from the build directory, specifying the Makefile from the source directory.
 ```bash
@@ -62,4 +62,3 @@ Similarly, the source RPM can be build by specifying the `rpm` target.
 ```bash
 make -f /slurm-uenv-mount/Makefile rpm
 ```
-
