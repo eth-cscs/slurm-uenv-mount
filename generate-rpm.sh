@@ -20,8 +20,8 @@ do
         --build)   shift; build_path=${arg};;
         --pkgname) shift; pkg_name=${arg};;
         --spec)    shift; spec_file=${arg};;
-	--files)   shift; files=(${arg});;
-	--)        shift; break;;
+  --files)   shift; files=(${arg});;
+  --)        shift; break;;
         *) echo "unknown flag ${flag}"; exit 1 ;;
     esac
     shift
@@ -35,7 +35,7 @@ mkdir -p "${tar_path}"
 
 for f in "${files[@]}"
 do
-    cp "${source_path}/${f}" "${tar_path}"
+    cp "${f}" "${tar_path}"
 done
 
 

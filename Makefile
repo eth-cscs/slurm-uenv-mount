@@ -37,10 +37,9 @@ install: libslurm-uenv-mount.so
 	cp -p libslurm-uenv-mount.so $(DESTDIR)$(libdir)
 
 rpm: $(FILES) $(SRCDIR)slurm-uenv-mount.spec
-	$(SRCDIR)./generate-rpm.sh --build $(RPMBUILDDIR) --src "$(SRCDIR)" --pkgname $(RPMPKG) --spec "$(SRCDIR)slurm-uenv-mount.spec"
+	$(SRCDIR)./generate-rpm.sh --build $(RPMBUILDDIR) --src "$(SRCDIR)" --pkgname $(RPMPKG) --spec "$(SRCDIR)slurm-uenv-mount.spec" --files "$(FILES)"
 	sed -i "s|UENVMNT_VERSION|$(SLURM_UENV_MOUNT_VERSION)|g" "$(RPMBUILDDIR)/SPECS/slurm-uenv-mount.spec"
 	$(RPMBUILD) -bs --define "_topdir $(RPMBUILDDIR)" "$(RPMBUILDDIR)/SPECS/slurm-uenv-mount.spec"
 
 clean:
 	rm -rf libslurm-uenv-mount.so *.o rpm
-
