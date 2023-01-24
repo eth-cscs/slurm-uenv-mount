@@ -25,7 +25,8 @@ make install prefix=%{_prefix} DESTDIR=%{buildroot}
 %post
 REQ="required /usr/lib64/libslurm-uenv-mount.so"
 CNF=/etc/plugstack.conf.d/99-slurm-uenv-mount.conf
-echo "$REQ" >> "$CNF"
+mkdir -p /etc/plugstack.conf.d
+echo "$REQ" > "$CNF"
 
 %files
 %license LICENSE
