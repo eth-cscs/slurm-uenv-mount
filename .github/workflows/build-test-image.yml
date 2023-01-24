@@ -107,5 +107,5 @@ jobs:
       - run: |
           # --uenv-mount=.... without --uenv-mount-file must return an error
           su testuser -c sh <<\EOF
-          ci/tests/uenv-mount-point-alone.sh
+          srun --uenv-mount=/user-environment -v true |& grep 'srun: error: --uenv-mount'
           EOF
