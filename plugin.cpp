@@ -70,7 +70,7 @@ static spank_option mount_point_arg{
     1, // requires an argument
     0, // plugin specific value to pass to the callback (unnused)
     [](int val, const char *optarg, int remote) -> int {
-      slurm_info("uenv-mount: val:%d optarg:%s remote:%d", val, optarg,
+      slurm_verbose("uenv-mount: val:%d optarg:%s remote:%d", val, optarg,
                  remote);
       // todo: parse string to validate that the path exists
       // todo: parse string to validate that it is a valid and allowed path
@@ -86,7 +86,7 @@ static spank_option file_arg{
     1, // requires an argument
     0, // plugin specific value to pass to the callback (unnused)
     [](int val, const char *optarg, int remote) -> int {
-      slurm_info("uenv-mount: val:%d optarg:%s remote:%d", val, optarg,
+      slurm_verbose("uenv-mount: val:%d optarg:%s remote:%d", val, optarg,
                  remote);
       // check that file exists happens in do_mount
       args.file = std::string{optarg};
@@ -100,7 +100,7 @@ static spank_option prolog_arg{
     0, // takes an argument
     0, // plugin specific value to pass to the callback (unnused)
     [](int val, const char *optarg, int remote) -> int {
-      slurm_info("uenv-mount: val:%d optarg:%s remote:%d", val, optarg,
+      slurm_verbose("uenv-mount: val:%d optarg:%s remote:%d", val, optarg,
                  remote);
       args.run_prologue = false;
       return ESPANK_SUCCESS;
