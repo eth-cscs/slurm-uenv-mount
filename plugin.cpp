@@ -6,8 +6,8 @@
 #include "mount.hpp"
 
 extern "C" {
-#include <slurm/spank.h>
 #include <slurm/slurm_errno.h>
+#include <slurm/spank.h>
 }
 
 //
@@ -52,9 +52,9 @@ int slurm_spank_init_post_opt(spank_t sp, int ac, char **av) {
 // Implementation
 //
 namespace impl {
-
+#define DEFAULT_MOUNT_POINT "/user-environment"
 struct arg_pack {
-  std::string mount_point = "/user-environment";
+  std::string mount_point = DEFAULT_MOUNT_POINT;
   bool mount_flag_present = false;
   std::optional<std::string> file;
   bool run_prologue = false;
@@ -65,13 +65,13 @@ static arg_pack args{};
 static spank_option mount_point_arg{
     (char *)"uenv-mount",
     (char *)"<path>",
-    (char *)"path whence the environment is mounted: default "
-            "/user-environment",
+    (char *)"path whence the environment is mounted: "
+            "default " DEFAULT_MOUNT_POINT,
     1, // requires an argument
     0, // plugin specific value to pass to the callback (unnused)
     [](int val, const char *optarg, int remote) -> int {
       slurm_verbose("uenv-mount: val:%d optarg:%s remote:%d", val, optarg,
-                 remote);
+                    remote);
       // todo: parse string to validate that the path exists
       // todo: parse string to validate that it is a valid and allowed path
       args.mount_point = optarg;
@@ -87,7 +87,7 @@ static spank_option file_arg{
     0, // plugin specific value to pass to the callback (unnused)
     [](int val, const char *optarg, int remote) -> int {
       slurm_verbose("uenv-mount: val:%d optarg:%s remote:%d", val, optarg,
-                 remote);
+                    remote);
       // check that file exists happens in do_mount
       args.file = std::string{optarg};
       return ESPANK_SUCCESS;
@@ -101,7 +101,7 @@ static spank_option prolog_arg{
     0, // plugin specific value to pass to the callback (unnused)
     [](int val, const char *optarg, int remote) -> int {
       slurm_verbose("uenv-mount: val:%d optarg:%s remote:%d", val, optarg,
-                 remote);
+                    remote);
       args.run_prologue = false;
       return ESPANK_SUCCESS;
     }};
@@ -143,7 +143,7 @@ int slurm_spank_init(spank_t sp, int ac, char **av) {
 }
 
 int slurm_spank_init_post_opt(spank_t sp, int, char **av) {
-  if(!args.file && args.mount_flag_present) {
+  if (!args.file && args.mount_flag_present) {
     slurm_error(
         "--uenv-mount is only allowed to be used together with --uenv-file.");
     return ESPANK_ERROR;
