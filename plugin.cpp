@@ -17,7 +17,7 @@ extern "C" {
 namespace impl {
 int slurm_spank_init(spank_t sp, int ac, char **av);
 int slurm_spank_task_init_privileged(spank_t sp, int ac, char **av);
-int slurm_spank_local_user_init(spank_t sp, int ac, char **av);
+int slurm_spank_init_post_opt(spank_t sp, int ac, char **av);
 } // namespace impl
 
 //
@@ -42,8 +42,8 @@ int slurm_spank_task_init_privileged(spank_t sp, int ac, char **av) {
   return impl::slurm_spank_task_init_privileged(sp, ac, av);
 }
 
-int slurm_spank_local_user_init(spank_t sp, int ac, char **av) {
-  return impl::slurm_spank_local_user_init(sp, ac, av);
+int slurm_spank_init_post_opt(spank_t sp, int ac, char **av) {
+  return impl::slurm_spank_init_post_opt(sp, ac, av);
 }
 
 } // extern "C"
@@ -55,6 +55,7 @@ namespace impl {
 
 struct arg_pack {
   std::string mount_point = "/user-environment";
+  bool mount_flag_present = false;
   std::optional<std::string> file;
   bool run_prologue = false;
 };
@@ -74,6 +75,7 @@ static spank_option mount_point_arg{
       // todo: parse string to validate that the path exists
       // todo: parse string to validate that it is a valid and allowed path
       args.mount_point = optarg;
+      args.mount_flag_present = true;
       return ESPANK_SUCCESS;
     }};
 
@@ -140,18 +142,12 @@ int slurm_spank_init(spank_t sp, int ac, char **av) {
   return ESPANK_SUCCESS;
 }
 
-int slurm_spank_local_user_init(spank_t sp, int ac, char **av) {
-  if (!args.file) {
-    // ensure that --uenv-mount is not present, getopt is called here
-    // because it is not allowed to be called in `spank_init`.
-    char* buf;
-    spank_err_t ret = spank_option_getopt(sp, &mount_point_arg, &buf);
-    if (ret == ESPANK_SUCCESS) {
-      slurm_error("--uenv-mount is only allowed to be used together with --uenv-file.");
-      return ESPANK_ERROR;
-    }
+int slurm_spank_init_post_opt(spank_t sp, int, char **av) {
+  if(!args.file && args.mount_flag_present) {
+    slurm_error(
+        "--uenv-mount is only allowed to be used together with --uenv-file.");
+    return ESPANK_ERROR;
   }
-
   return ESPANK_SUCCESS;
 }
 
