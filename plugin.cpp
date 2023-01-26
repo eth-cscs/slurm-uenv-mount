@@ -26,7 +26,7 @@ int slurm_spank_init_post_opt(spank_t sp, int ac, char **av);
 
 extern "C" {
 
-extern const char plugin_name[] = "sqfs-spank-mount";
+extern const char plugin_name[] = "uenv-mount";
 extern const char plugin_type[] = "spank";
 #ifdef SLURM_VERSION_NUMBER
 extern const unsigned int plugin_version = SLURM_VERSION_NUMBER;
