@@ -18,6 +18,10 @@ Build the container (container name `slurm-uenv-mount`, service name `slurm`):
 docker compose build
 ```
 
+By default the plugin is built in a container with slurm `20.11.9`. The version
+can be changed in `docker-compose.yaml` (check
+github.com/eth-cscs/slurm-container for a list of available versions).
+
 Start the container in the background:
 ```bash
 docker compose up -d
