@@ -2,8 +2,6 @@
 
 | Filename                     | Expectation                                                                                                                   |
 |:-----------------------------|-------------------------------------------------------------------------------------------------------------------------------|
-| `invalid-image.sh`           | plugin fails to mount an inexistent image                                                                                     |
-| `invalid-mount-point.sh`     | plugin fails when mounting on an inexistent path                                                                              |
 | `plain.sbatch`               | nothing is mounted when running sbatch (no uenv flags)                                                                        |
 | `squashfs-run.sh`            | - env variables from squashfs-run are taken into account <br> - env variables have no effect when --uenv-mount-file overrides |
 | `test-override-flags.sbatch` | override flags take precedence                                                                                                |

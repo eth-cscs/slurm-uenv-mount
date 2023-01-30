@@ -12,4 +12,5 @@ expect_error()
 }
 export -f expect_error
 
-expect_error 'srun --uenv-file=/does/not/exist true'
+
+expect_error 'srun -n 1 --uenv-file=/home/testuser/fs.sqfs --uenv-mount=/path/does/not/exist true'
