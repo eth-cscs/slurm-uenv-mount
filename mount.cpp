@@ -32,24 +32,24 @@ int do_mount(spank_t spank, const char *mount_point, const char *squashfs_file) 
   auto mnt_status = stat(mount_point, &mnt_stat);
   if (mnt_status) {
     slurm_spank_log("Invalid mount point \"%s\"", mount_point);
-    return ESPANK_ERROR;
+    return -ESPANK_ERROR;
   }
   if (!S_ISDIR(mnt_stat.st_mode)) {
     slurm_spank_log("Invalid mount point \"%s\" is not a directory",
                     mount_point);
-    return ESPANK_ERROR;
+    return -ESPANK_ERROR;
   }
 
   // Check that the input squashfs file exists.
   int sqsh_status = stat(squashfs_file, &mnt_stat);
   if (sqsh_status) {
     slurm_spank_log("Invalid squashfs image \"%s\"", squashfs_file);
-    return ESPANK_ERROR;
+    return -ESPANK_ERROR;
   }
   if (!S_ISREG(mnt_stat.st_mode)) {
     slurm_spank_log("Invalid squashfs image \"%s\" is not a file",
                     squashfs_file);
-    return ESPANK_ERROR;
+    return -ESPANK_ERROR;
   }
 
   // TODO: do we create a new namespace when mounting directly?
@@ -58,39 +58,39 @@ int do_mount(spank_t spank, const char *mount_point, const char *squashfs_file) 
   // manages processes.
   if (unshare(CLONE_NEWNS) != 0) {
     slurm_spank_log("Failed to unshare the mount namespace");
-    return ESPANK_ERROR;
+    return -ESPANK_ERROR;
   }
   if (mount(NULL, "/", NULL, MS_SLAVE | MS_REC, NULL) != 0) {
     slurm_spank_log("unable to mount \"%s\" image at mount pint \"%s\"",
                     squashfs_file, mount_point);
-    return ESPANK_ERROR;
+    return -ESPANK_ERROR;
   }
 
   auto cxt = mnt_new_context();
 
   if (mnt_context_disable_mtab(cxt, 1) != 0) {
     slurm_spank_log("Failed to disable mtab");
-    return ESPANK_ERROR;
+    return -ESPANK_ERROR;
   }
 
   if (mnt_context_set_fstype(cxt, "squashfs") != 0) {
     slurm_spank_log("Failed to set fstype to squashfs");
-    return ESPANK_ERROR;
+    return -ESPANK_ERROR;
   }
 
   if (mnt_context_append_options(cxt, "loop,nosuid,nodev,ro") != 0) {
     slurm_spank_log("Failed to set mount options");
-    return ESPANK_ERROR;
+    return -ESPANK_ERROR;
   }
 
   if (mnt_context_set_source(cxt, squashfs_file) != 0) {
     slurm_spank_log("Failed to set source");
-    return ESPANK_ERROR;
+    return -ESPANK_ERROR;
   }
 
   if (mnt_context_set_target(cxt, mount_point) != 0) {
     slurm_spank_log("Failed to set target");
-    return ESPANK_ERROR;
+    return -ESPANK_ERROR;
   }
 
   int rc = mnt_context_mount(cxt);
@@ -99,7 +99,7 @@ int do_mount(spank_t spank, const char *mount_point, const char *squashfs_file) 
     char buf[256];
     rc = mnt_context_get_excode(cxt, rc, buf, sizeof(buf));
     slurm_spank_log("%s:%s", mnt_context_get_target(cxt), buf);
-    return ESPANK_ERROR;
+    return -ESPANK_ERROR;
   }
 
   // set env after success

@@ -146,7 +146,7 @@ int slurm_spank_init_post_opt(spank_t sp, int, char **av) {
   if (!args.file && args.mount_flag_present) {
     slurm_error(
         "--uenv-mount is only allowed to be used together with --uenv-file.");
-    return ESPANK_ERROR;
+    return -ESPANK_ERROR;
   }
   return ESPANK_SUCCESS;
 }
