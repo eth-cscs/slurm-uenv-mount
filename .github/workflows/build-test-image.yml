@@ -87,6 +87,7 @@ jobs:
           export -f expect_error
       - run: |
           # verify that nothing is mounted when no --uenv-file flag is given
+          type expect_error
           su testuser -c sh <<\EOF
           sbatch --wait ci/tests/plain.sbatch || exit 1
           EOF
