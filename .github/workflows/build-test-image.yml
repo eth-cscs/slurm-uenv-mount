@@ -74,20 +74,8 @@ jobs:
           /entrypoint.sh
           sinfo
           ci/create-dummy-sqfs.sh
-          expect_error()
-          {
-              (
-                  set +e
-                  if  ! (eval "$1") ; then
-                      return 0
-                  fi
-                  return 1
-              )
-          }
-          export -f expect_error
       - run: |
           # verify that nothing is mounted when no --uenv-file flag is given
-          type expect_error
           su testuser -c sh <<\EOF
           sbatch --wait ci/tests/plain.sbatch || exit 1
           EOF
@@ -109,17 +97,16 @@ jobs:
       - run: |
           # verify that attempting to mount an non-existent image fails
           su testuser -c sh <<\EOF
-          expect_error 'srun --uenv-file=/does/not/exist true'
+          ci/tests/invalid-image.sh
           EOF
       - run: |
           # verify attempting to mount under an non-existent path fails
           su testuser -c -m sh <<\EOF
-          expect_error 'srun -n 1 --uenv-file=/home/testuser/fs.sqfs --uenv-mount=/path/does/not/exist true'
+          ci/tests/invalid-file.sh
           EOF
       - run: |
           # --uenv-mount=.... without --uenv-mount-file must return an error
           su testuser -c -m sh <<\EOF
           # this is expected to vail
-          expect_error 'srun --uenv-mount=/user-environment -v true'
-          expect_error 'srun --uenv-file=/home/testuser/fs.sqfs --uenv-mount=/user-environment -v true'
+          ci/tests/invalid-flags.sh
           EOF
