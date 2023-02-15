@@ -13,52 +13,33 @@ docker login --username=<USERNAME> ghcr.io
 ```
 When using GitHub Packages, `USERNAME` can be any text. The password is the GitHub Token.
 
-Next pull the container from GitHub Packages.
+Build the container (container name `slurm-uenv-mount`, service name `slurm`):
 ```bash
-docker pull <DOCKER_CONTAINER>
-```
-`DOCKER_CONTAINER` is the full name of the slurm container. This will typically
-be something like `ghcr.io/eth-cscs/slurm-container-SLURM_VERSION:latest`.
-For instance,
-```bash
-docker pull ghcr.io/eth-cscs/slurm-container-20.11.9:latest
+docker compose build
 ```
 
-Now build a container named `slurm-uenv-mount` that contains the Slurm server, clients, and the plugin.
-The `Dockerfile` in this directory needs to use the same `DOCKER_CONTAINER` pulled earlier.
-Either edit `Dockerfile` and replace the name of the default root container or supply the name on the commandline.
+By default the plugin is built in a container with slurm `20.11.9`. The version
+can be changed in `docker-compose.yaml` (check
+github.com/eth-cscs/slurm-container for a list of available versions).
+
+Start the container in the background:
 ```bash
-./build.sh [DOCKER_CONTAINER]
+docker compose up -d
+```
+- The source tree is mounted read-only under `/slurm-uenv-mount`.
+
+Launch a shell in the container as unprivileged user:
+```bash
+docker compose exec -u testuser -w /home/testuser slurm bash
 ```
 
-The Dockerfile creates user `testuser` for running slurm commands as a normal user. The container itself should run
-as privileged to allow the slurm server to start.
-
-Run the container and start an interactive session as the unprivileged user `testuser`:
+Run tests:
 ```bash
-docker run --name slurm-uenv-mount --rm --privileged -it slurm-uenv-mount bash
+docker compose exec -u testuser -w /home/testuser -T slurm bash < run-tests.sh
 ```
 
-Alternatively, `run.sh` can be used as a shortcut:
+The source code is mounted read-only inside the container under `/slurm-uenv-mount`.
+When making changes in the local source tree, the plugin can be rebuilt/resintalled in the running container with the following script:
 ```bash
-./run.sh bash
-```
-
-`./rebuild.sh` rebuilds the plugin in the container from the local source tree (this assumes the container was started via `./run.sh`).
-
-# Rebuilding the plugin
-
-The `run.sh` script mounts the source code directory as a read-only volume inside the container under `/slurm-uenv-mount`.
-This allows the source code to be modified outside of the container, but rebuilt and tested in a slurm environment.
-To rebuild the plugin, first create a build directory in the `testuser` home inside a running container.
-Then run `make` from the build directory, specifying the Makefile from the source directory.
-```bash
-mkdir BUILD
-cd BUILD
-make -f /slurm-uenv-mount/Makefile
-```
-
-Similarly, the source RPM can be build by specifying the `rpm` target.
-```bash
-make -f /slurm-uenv-mount/Makefile rpm
+./rebuild.sh
 ```

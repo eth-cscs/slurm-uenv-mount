@@ -101,11 +101,12 @@ jobs:
           EOF
       - run: |
           # verify attempting to mount under an non-existent path fails
-          su testuser -c sh <<\EOF
-          ci/tests/invalid-mount-point.sh
+          su testuser -c -m sh <<\EOF
+          ci/tests/invalid-file.sh
           EOF
       - run: |
           # --uenv-mount=.... without --uenv-mount-file must return an error
-          su testuser -c sh <<\EOF
-          srun --uenv-mount=/user-environment -v true |& grep 'srun: error: --uenv-mount'
+          su testuser -c -m sh <<\EOF
+          # this is expected to vail
+          ci/tests/invalid-flags.sh
           EOF

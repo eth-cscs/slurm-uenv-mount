@@ -1,0 +1,12 @@
+services:
+  slurm:
+    privileged: true
+    container_name: slurm-uenv-mount
+    volumes:
+      - ../:/slurm-uenv-mount:ro
+    build:
+      context: ../
+      args:
+        DOCKER_CONTAINER: ghcr.io/eth-cscs/slurm-container-20.11.9:latest
+      dockerfile: docker/Dockerfile
+    command: tail -F anything

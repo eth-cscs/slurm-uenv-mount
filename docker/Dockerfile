@@ -14,6 +14,7 @@ RUN zypper install -y\
     unzip \
     rpm-build \
     autoconf\
+    libcap-progs \
     automake\
     libtool \
     xz-devel\

@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-docker exec -w /slurm-uenv-mount slurm-uenv-mount \
+docker compose exec -w /slurm-uenv-mount slurm \
     sh -c 'mkdir -p /tmp/build \
         && cd /tmp/build \
         && make -f /slurm-uenv-mount/Makefile all install \
