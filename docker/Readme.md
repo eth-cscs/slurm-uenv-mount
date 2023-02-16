@@ -46,5 +46,5 @@ When making changes in the local source tree, the plugin can be rebuilt/resintal
 
 Build the binary rpm, e.g. for installation on production system:
 ```bash
-docker compose exec -T slurm bash < make-rpm.sh
+docker compose exec -T slurm bash < make-binary-rpm.sh
 ```

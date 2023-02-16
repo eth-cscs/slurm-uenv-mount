@@ -4,7 +4,9 @@ set -e
 
 mkdir -p /tmp/build-rpm
 cd /tmp/build-rpm
-make -f /slurm-uenv-mount/Makefile rpm
+
+_SLURM_VER=$(srun --version | sed 's/slurm //')
+make -f /slurm-uenv-mount/Makefile RPM_SLURM_VERSION="${_SLURM_VER}" rpm
 rpmbuild --rebuild "$(find rpm/SRPMS -name '*.rpm' -type f -print -quit)" --define "_topdir $(pwd)/rpm"
 find rpm -name '*.rpm' -type f -exec cp {} . \;
 

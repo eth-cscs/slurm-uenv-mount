@@ -13,8 +13,8 @@ jobs:
       matrix:
         version:
           - 20.11.9
-          - 21.08.8-2
-          - 22.05.5
+          # - 21.08.8-2
+          - 22.05.2
 
     container:
       image: ghcr.io/eth-cscs/cache_docker/slurm-uenv-mount-tester-${{ matrix.version }}:latest
@@ -23,35 +23,34 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
       env:
         NODE_HW: CPUS=2
+        SLURM_VER: ${{ matrix.version }}
       options: --cpus 2 --privileged
 
     steps:
       - uses: actions/checkout@v3
       - run: |
-          make rpm
+          make RPM_SLURM_VERSION=${SLURM_VER} rpm
           sudo rpmbuild --rebuild "$(find rpm/SRPMS -name '*.rpm' -type f -print -quit)" --define "_topdir $(pwd)/rpm"
-          sudo rpm --install "$(find rpm/RPMS -name '*.rpm' -type f -print -quit)"
+          # TODO: this fails, because the new rpm lists slurm as dependency (image installed slurm manually not via pkg manager)
+          # sudo rpm --install "$(find rpm/RPMS -name '*.rpm' -type f -print -quit)"
           find rpm -name '*.rpm' -type f -exec cp {} . \;
+          fname=$(ls *x86_64.rpm)
+          dstname=$(echo $fname | sed "s/x86_64/x86_64-slurm-${SLURM_VER}/")
+          mv $fname $dstname
       - name: upload-rpm
         uses: actions/upload-artifact@v3
         with:
-          name: rpm-${{ matrix.version }}
+          name: rpm
           path: '*.rpm'
 
   tag-release:
     runs-on: ubuntu-20.04
-    strategy:
-        matrix:
-          version:
-            - 20.11.9
-            # - 21.08.8-2
-            # - 22.05.5
     needs: rpm
     steps:
       - name: download-artifacts
         uses: actions/download-artifact@v3
         with:
-          name: rpm-${{ matrix.version }}
+          name: rpm
       - name: release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
