@@ -13,7 +13,6 @@ jobs:
       matrix:
         version:
           - 20.11.9
-          # - 21.08.8-2
           - 22.05.2
 
     container:
@@ -31,8 +30,8 @@ jobs:
       - run: |
           make RPM_SLURM_VERSION=${SLURM_VER} rpm
           sudo rpmbuild --rebuild "$(find rpm/SRPMS -name '*.rpm' -type f -print -quit)" --define "_topdir $(pwd)/rpm"
-          # TODO: this fails, because the new rpm lists slurm as dependency (image installed slurm manually not via pkg manager)
-          # sudo rpm --install "$(find rpm/RPMS -name '*.rpm' -type f -print -quit)"
+          # --nodeps is required since the ci container has handbuilt slurm (not installed via rpm)
+          sudo rpm --install --nodeps "$(find rpm/RPMS -name '*.rpm' -type f -print -quit)"
           find rpm -name '*.rpm' -type f -exec cp {} . \;
           fname=$(ls *x86_64.rpm)
           dstname=$(echo $fname | sed "s/x86_64/x86_64-slurm-${SLURM_VER}/")
