@@ -43,3 +43,8 @@ When making changes in the local source tree, the plugin can be rebuilt/resintal
 ```bash
 ./rebuild.sh
 ```
+
+Build the binary rpm, e.g. for installation on production system:
+```bash
+docker compose exec -T slurm bash < make-binary-rpm.sh
+```

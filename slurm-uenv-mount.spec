@@ -3,6 +3,7 @@ Version:        UENVMNT_VERSION
 Release:        1%{?dist}
 Summary:        SLURM spank plugin to mount squashfs images.
 Prefix:         /usr
+Requires:       slurm = SLURM_VERSION
 
 License:        BSD3
 URL:            https://github.com/eth-cscs/slurm-uenv-mount

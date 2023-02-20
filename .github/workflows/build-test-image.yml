@@ -14,8 +14,7 @@ jobs:
       matrix:
         version:
           - 20.11.9
-          - 21.08.8-2
-          - 22.05.5
+          - 22.05.2
 
     env:
       base_tag:     ghcr.io/eth-cscs/slurm-container-${{ matrix.version }}:latest
@@ -51,8 +50,7 @@ jobs:
       matrix:
         version:
           - 20.11.9
-          - 21.08.8-2
-          - 22.05.5
+          - 22.05.2
 
     container:
       image: ghcr.io/eth-cscs/cache_docker/slurm-uenv-mount-tester-${{ matrix.version }}:latest
