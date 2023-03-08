@@ -1,6 +1,7 @@
 #include <optional>
 #include <string>
 #include <tuple>
+#include <filesystem>
 
 // // root version
 #include "mount.hpp"
@@ -54,9 +55,9 @@ int slurm_spank_init_post_opt(spank_t sp, int ac, char **av) {
 namespace impl {
 #define DEFAULT_MOUNT_POINT "/user-environment"
 struct arg_pack {
-  std::string mount_point = DEFAULT_MOUNT_POINT;
+  std::filesystem::path mount_point = DEFAULT_MOUNT_POINT;
   bool mount_flag_present = false;
-  std::optional<std::string> file;
+  std::optional<std::filesystem::path> file;
   bool run_prologue = false;
 };
 
@@ -74,7 +75,7 @@ static spank_option mount_point_arg{
                     remote);
       // todo: parse string to validate that the path exists
       // todo: parse string to validate that it is a valid and allowed path
-      args.mount_point = optarg;
+      args.mount_point = std::filesystem::absolute(optarg);
       args.mount_flag_present = true;
       return ESPANK_SUCCESS;
     }};
@@ -89,7 +90,7 @@ static spank_option file_arg{
       slurm_verbose("uenv-mount: val:%d optarg:%s remote:%d", val, optarg,
                     remote);
       // check that file exists happens in do_mount
-      args.file = std::string{optarg};
+      args.file = std::filesystem::absolute(optarg);
       return ESPANK_SUCCESS;
     }};
 
