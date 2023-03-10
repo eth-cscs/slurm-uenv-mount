@@ -108,3 +108,10 @@ jobs:
           # this is expected to vail
           ci/tests/invalid-flags.sh
           EOF
+      - run: |
+          # check that relative paths are converted to absolute paths
+          su testuser -c -m sh <<\EOF
+          script=$(realpath ci/tests/relative-path.sbatch)
+          cd ~
+          sbatch --wait $script || exit 1
+          EOF
