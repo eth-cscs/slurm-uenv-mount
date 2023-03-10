@@ -12,6 +12,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <string>
 
 extern "C" {
 #include <slurm/spank.h>
@@ -19,36 +20,29 @@ extern "C" {
 
 namespace impl {
 
-int do_mount(spank_t spank, const char *mount_point, const char *squashfs_file) {
-  // skip if no mount requested
-  if (!squashfs_file) {
-    // TODO: log that no action was taken
-    slurm_spank_log("no file given to mount!");
-    return ESPANK_SUCCESS;
-  }
-
+int do_mount(spank_t spank, const std::string& mount_point, const std::string& squashfs_file) {
   // Check that the mount point exists.
   struct stat mnt_stat;
-  auto mnt_status = stat(mount_point, &mnt_stat);
+  auto mnt_status = stat(mount_point.c_str(), &mnt_stat);
   if (mnt_status) {
-    slurm_spank_log("Invalid mount point \"%s\"", mount_point);
+    slurm_spank_log("Invalid mount point \"%s\"", mount_point.c_str());
     return -ESPANK_ERROR;
   }
   if (!S_ISDIR(mnt_stat.st_mode)) {
     slurm_spank_log("Invalid mount point \"%s\" is not a directory",
-                    mount_point);
+                    mount_point.c_str());
     return -ESPANK_ERROR;
   }
 
   // Check that the input squashfs file exists.
-  int sqsh_status = stat(squashfs_file, &mnt_stat);
+  int sqsh_status = stat(squashfs_file.c_str(), &mnt_stat);
   if (sqsh_status) {
-    slurm_spank_log("Invalid squashfs image \"%s\"", squashfs_file);
+    slurm_spank_log("Invalid squashfs image \"%s\"", squashfs_file.c_str());
     return -ESPANK_ERROR;
   }
   if (!S_ISREG(mnt_stat.st_mode)) {
     slurm_spank_log("Invalid squashfs image \"%s\" is not a file",
-                    squashfs_file);
+                    squashfs_file.c_str());
     return -ESPANK_ERROR;
   }
 
@@ -62,7 +56,7 @@ int do_mount(spank_t spank, const char *mount_point, const char *squashfs_file) 
   }
   if (mount(NULL, "/", NULL, MS_SLAVE | MS_REC, NULL) != 0) {
     slurm_spank_log("unable to mount \"%s\" image at mount pint \"%s\"",
-                    squashfs_file, mount_point);
+                    squashfs_file.c_str(), mount_point.c_str());
     return -ESPANK_ERROR;
   }
 
@@ -83,12 +77,12 @@ int do_mount(spank_t spank, const char *mount_point, const char *squashfs_file) 
     return -ESPANK_ERROR;
   }
 
-  if (mnt_context_set_source(cxt, squashfs_file) != 0) {
+  if (mnt_context_set_source(cxt, squashfs_file.c_str()) != 0) {
     slurm_spank_log("Failed to set source");
     return -ESPANK_ERROR;
   }
 
-  if (mnt_context_set_target(cxt, mount_point) != 0) {
+  if (mnt_context_set_target(cxt, mount_point.c_str()) != 0) {
     slurm_spank_log("Failed to set target");
     return -ESPANK_ERROR;
   }
@@ -103,8 +97,8 @@ int do_mount(spank_t spank, const char *mount_point, const char *squashfs_file) 
   }
 
   // set env after success
-  spank_setenv(spank, ENV_MOUNT_FILE, squashfs_file, 1);
-  spank_setenv(spank, ENV_MOUNT_POINT, mount_point, 1);
+  spank_setenv(spank, ENV_MOUNT_FILE, squashfs_file.c_str(), 1);
+  spank_setenv(spank, ENV_MOUNT_POINT, mount_point.c_str(), 1);
 
   return ESPANK_SUCCESS;
 }

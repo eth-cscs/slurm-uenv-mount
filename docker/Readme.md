@@ -30,12 +30,12 @@ docker compose up -d
 
 Launch a shell in the container as unprivileged user:
 ```bash
-docker compose exec -u testuser -w /home/testuser slurm bash
+docker compose exec --privileged -u testuser -w /home/testuser slurm bash
 ```
 
 Run tests:
 ```bash
-docker compose exec -u testuser -w /home/testuser -T slurm bash < run-tests.sh
+docker compose exec --privileged -u testuser -w /home/testuser -T slurm bash < run-tests.sh
 ```
 
 The source code is mounted read-only inside the container under `/slurm-uenv-mount`.

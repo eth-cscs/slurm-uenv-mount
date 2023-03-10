@@ -1,6 +1,10 @@
+#include <cstdlib>
 #include <optional>
 #include <string>
 #include <tuple>
+#include <stdexcept>
+#include <cstring>
+#include <unistd.h>
 
 // // root version
 #include "mount.hpp"
@@ -62,6 +66,37 @@ struct arg_pack {
 
 static arg_pack args{};
 
+/// wrapper for spank_getenv
+std::optional<std::string> getenv(spank_t sp, const char *var) {
+  const int len = 1024;
+  char buf[len];
+  spank_err_t ret = spank_getenv(sp, var, buf, len);
+
+  if (ret == ESPANK_ENV_NOEXIST) {
+    return std::nullopt;
+  }
+
+  if (ret == ESPANK_SUCCESS) {
+    return std::string{buf};
+  }
+
+  throw ret;
+}
+
+/// if `path` is a relative path, prepend ${SLURM_SUBMIT_DIR}
+std::string submit_abspath(spank_t sp, std::string path) {
+  if (path[0] ==  '/') {
+    return path;
+  }
+
+  auto submit_dir = getenv(sp, "SLURM_SUBMIT_DIR");
+  if(submit_dir->back() != '/') {
+    submit_dir->push_back('/');
+  }
+  return *submit_dir + path;
+
+}
+
 static spank_option mount_point_arg{
     (char *)"uenv-mount",
     (char *)"<path>",
@@ -90,6 +125,7 @@ static spank_option file_arg{
                     remote);
       // check that file exists happens in do_mount
       args.file = std::string{optarg};
+      args.file = std::string{optarg};
       return ESPANK_SUCCESS;
     }};
 
@@ -106,23 +142,6 @@ static spank_option prolog_arg{
       return ESPANK_SUCCESS;
     }};
 
-/// wrapper for spank_getenv
-std::optional<std::string> getenv(spank_t sp, const char *var) {
-  const int len = 1024;
-  char buf[len];
-  spank_err_t ret = spank_getenv(sp, var, buf, len);
-
-  if (ret == ESPANK_ENV_NOEXIST) {
-    return std::nullopt;
-  }
-
-  if (ret == ESPANK_SUCCESS) {
-    return std::string{buf};
-  }
-
-  throw ret;
-}
-
 /// detect if srun/sbatch has been called from an squashfs-run/squashfs-mount
 std::tuple<std::optional<std::string>, std::optional<std::string>>
 get_squashfs_run_env(spank_t sp) {
@@ -133,28 +152,34 @@ get_squashfs_run_env(spank_t sp) {
 
 int slurm_spank_init(spank_t sp, int ac, char **av) {
 
-  for (auto arg : {&mount_point_arg, &file_arg, &prolog_arg}) {
-    if (auto status = spank_option_register(sp, arg)) {
-      return status;
+    for (auto arg : {&mount_point_arg, &file_arg, &prolog_arg}) {
+      if (auto status = spank_option_register(sp, arg)) {
+        return status;
+      }
     }
-  }
 
   return ESPANK_SUCCESS;
 }
 
 int slurm_spank_init_post_opt(spank_t sp, int, char **av) {
+
+  slurm_spank_log("in spank_init_post_opt %d", getpid());
+  slurm_spank_log("in spank_init_post_opt args.file: %s", args.file->c_str());
   if (!args.file && args.mount_flag_present) {
+    slurm_spank_log("in spank_init_post_opt args.file: mount flag was given without args.file, going to throw an error.");
     slurm_error(
         "--uenv-mount is only allowed to be used together with --uenv-file.");
     return -ESPANK_ERROR;
   }
+
+  slurm_spank_log("in spank_init_post_opt exiting with ESPANK_SUCCESS");
   return ESPANK_SUCCESS;
 }
 
 int slurm_spank_task_init_privileged(spank_t sp, int ac, char **av) {
   // if --uenv-file is present mount it
   if (args.file) {
-    return do_mount(sp, args.mount_point.c_str(), args.file->c_str());
+    return do_mount(sp, submit_abspath(sp, args.mount_point), submit_abspath(sp, args.file->c_str()));
   }
 
   // check if sbatch/srun/salloc was called inside squashfs-run tty
@@ -166,7 +191,7 @@ int slurm_spank_task_init_privileged(spank_t sp, int ac, char **av) {
     return err;
   }
   if (env_file && env_mount_point) {
-    return do_mount(sp, env_mount_point->c_str(), env_file->c_str());
+    return do_mount(sp, *env_mount_point, *env_file);
   }
 
   return ESPANK_SUCCESS;

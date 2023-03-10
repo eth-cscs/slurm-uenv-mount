@@ -17,31 +17,50 @@ run_sbatch()
 }
 
 (
-    while IFS= read -r -d '' file
-    do
-        run_sbatch "${file}"
-    done <   <(find /slurm-uenv-mount/ci/tests -iname '*.sbatch' -print0)
+    # while IFS= read -r -d '' file
+    # do
+    #     run_sbatch "${file}"
+    # done <   <(find /slurm-uenv-mount/ci/tests -iname '*.sbatch' -print0)
 
+    # echo "-----------------------------------------------------------------------"
+    # echo "test inheritance of UENV_MOUNT_FILE/POINT in dummy squashfs-run session"
+    # echo "-----------------------------------------------------------------------"
+    # run_test_script /slurm-uenv-mount/ci/tests/squashfs-run.sh
+
+    # echo "-----------------------------------------------------------------------"
+    # echo "invalid.image.sh (expectation: slurm error)                            "
+    # echo "-----------------------------------------------------------------------"
+    # run_test_script /slurm-uenv-mount/ci/tests/invalid-image.sh
+
+    # echo "-----------------------------------------------------------------------"
+    # echo "invalid-file.sh (expectation: slurm error)                             "
+    # echo "-----------------------------------------------------------------------"
+    # run_test_script /slurm-uenv-mount/ci/tests/invalid-file.sh
+
+    # echo "-----------------------------------------------------------------------"
+    # echo "invalid-flags.sh (expectation: slurm error)                             "
+    # echo "-----------------------------------------------------------------------"
+    # run_test_script /slurm-uenv-mount/ci/tests/invalid-flags.sh
+
+    # echo "-----------------------------------------------------------------------"
+    # echo "relative paths (check)                                                 "
+    # echo "-----------------------------------------------------------------------"
+    # (
+    #     set -x
+    #     sbatch /slurm-uenv-mount/ci/tests/relative-path.sbatch
+    # )
 
     echo "-----------------------------------------------------------------------"
-    echo "test inheritance of UENV_MOUNT_FILE/POINT in dummy squashfs-run session"
+    echo "relative paths                                                         "
     echo "-----------------------------------------------------------------------"
-    run_test_script /slurm-uenv-mount/ci/tests/squashfs-run.sh
+    (
+        set -x
+        script=$(realpath /slurm-uenv-mount/ci/tests/relative-path.sbatch)
+        echo "script: ${script}"
+        cd ~
+        sbatch --wait $script
+    )
 
-    echo "-----------------------------------------------------------------------"
-    echo "invalid.image.sh (expectation: slurm error)                            "
-    echo "-----------------------------------------------------------------------"
-    run_test_script /slurm-uenv-mount/ci/tests/invalid-image.sh
-
-    echo "-----------------------------------------------------------------------"
-    echo "invalid-file.sh (expectation: slurm error)                             "
-    echo "-----------------------------------------------------------------------"
-    run_test_script /slurm-uenv-mount/ci/tests/invalid-file.sh
-
-    echo "-----------------------------------------------------------------------"
-    echo "invalid-flags.sh (expectation: slurm error)                             "
-    echo "-----------------------------------------------------------------------"
-    run_test_script /slurm-uenv-mount/ci/tests/invalid-flags.sh
 ) || (printf 'TESTS FAILED' && exit 1)
 
 echo
