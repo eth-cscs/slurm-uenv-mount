@@ -1,6 +1,10 @@
+#include <cstdlib>
+#include <cstring>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <tuple>
+#include <unistd.h>
 
 // // root version
 #include "mount.hpp"
@@ -16,7 +20,6 @@ extern "C" {
 
 namespace impl {
 int slurm_spank_init(spank_t sp, int ac, char **av);
-int slurm_spank_task_init_privileged(spank_t sp, int ac, char **av);
 int slurm_spank_init_post_opt(spank_t sp, int ac, char **av);
 } // namespace impl
 
@@ -38,10 +41,6 @@ int slurm_spank_init(spank_t sp, int ac, char **av) {
   return impl::slurm_spank_init(sp, ac, av);
 }
 
-int slurm_spank_task_init_privileged(spank_t sp, int ac, char **av) {
-  return impl::slurm_spank_task_init_privileged(sp, ac, av);
-}
-
 int slurm_spank_init_post_opt(spank_t sp, int ac, char **av) {
   return impl::slurm_spank_init_post_opt(sp, ac, av);
 }
@@ -61,6 +60,36 @@ struct arg_pack {
 };
 
 static arg_pack args{};
+
+/// wrapper for spank_getenv
+std::optional<std::string> getenv(spank_t sp, const char *var) {
+  const int len = 1024;
+  char buf[len];
+  spank_err_t ret = spank_getenv(sp, var, buf, len);
+
+  if (ret == ESPANK_ENV_NOEXIST) {
+    return std::nullopt;
+  }
+
+  if (ret == ESPANK_SUCCESS) {
+    return std::string{buf};
+  }
+
+  throw ret;
+}
+
+/// if `path` is a relative path, prepend ${SLURM_SUBMIT_DIR}
+std::string make_abspath(spank_t sp, std::string path) {
+  if (path[0] == '/') {
+    return path;
+  }
+
+  auto submit_dir = getenv(sp, "SLURM_SUBMIT_DIR");
+  if (submit_dir->back() != '/') {
+    submit_dir->push_back('/');
+  }
+  return *submit_dir + path;
+}
 
 static spank_option mount_point_arg{
     (char *)"uenv-mount",
@@ -90,6 +119,7 @@ static spank_option file_arg{
                     remote);
       // check that file exists happens in do_mount
       args.file = std::string{optarg};
+      args.file = std::string{optarg};
       return ESPANK_SUCCESS;
     }};
 
@@ -105,23 +135,6 @@ static spank_option prolog_arg{
       args.run_prologue = false;
       return ESPANK_SUCCESS;
     }};
-
-/// wrapper for spank_getenv
-std::optional<std::string> getenv(spank_t sp, const char *var) {
-  const int len = 1024;
-  char buf[len];
-  spank_err_t ret = spank_getenv(sp, var, buf, len);
-
-  if (ret == ESPANK_ENV_NOEXIST) {
-    return std::nullopt;
-  }
-
-  if (ret == ESPANK_SUCCESS) {
-    return std::string{buf};
-  }
-
-  throw ret;
-}
 
 /// detect if srun/sbatch has been called from an squashfs-run/squashfs-mount
 std::tuple<std::optional<std::string>, std::optional<std::string>>
@@ -143,32 +156,31 @@ int slurm_spank_init(spank_t sp, int ac, char **av) {
 }
 
 int slurm_spank_init_post_opt(spank_t sp, int, char **av) {
+
   if (!args.file && args.mount_flag_present) {
     slurm_error(
         "--uenv-mount is only allowed to be used together with --uenv-file.");
     return -ESPANK_ERROR;
   }
-  return ESPANK_SUCCESS;
-}
 
-int slurm_spank_task_init_privileged(spank_t sp, int ac, char **av) {
-  // if --uenv-file is present mount it
-  if (args.file) {
-    return do_mount(sp, args.mount_point.c_str(), args.file->c_str());
-  }
+  if (spank_context() == spank_context_t::S_CTX_REMOTE) {
+    if (args.file) {
+      return do_mount(sp, make_abspath(sp, args.mount_point),
+                      make_abspath(sp, *args.file));
+    }
 
-  // check if sbatch/srun/salloc was called inside squashfs-run tty
-  std::optional<std::string> env_file, env_mount_point;
-  try {
-    std::tie(env_file, env_mount_point) = get_squashfs_run_env(sp);
-  } catch (spank_err_t err) {
-    slurm_error("%s", spank_strerror(err));
-    return err;
+    // check if sbatch/srun/salloc was called inside squashfs-run tty
+    std::optional<std::string> env_file, env_mount_point;
+    try {
+      std::tie(env_file, env_mount_point) = get_squashfs_run_env(sp);
+    } catch (spank_err_t err) {
+      slurm_error("%s", spank_strerror(err));
+      return err;
+    }
+    if (env_file && env_mount_point) {
+      return do_mount(sp, *env_mount_point, *env_file);
+    }
   }
-  if (env_file && env_mount_point) {
-    return do_mount(sp, env_mount_point->c_str(), env_file->c_str());
-  }
-
   return ESPANK_SUCCESS;
 }
 
