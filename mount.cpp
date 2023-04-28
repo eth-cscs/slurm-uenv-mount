@@ -20,6 +20,35 @@ extern "C" {
 
 namespace impl {
 
+
+int check_mount_file_is_valid(const std::string& mount_point, const std::string& squashfs_file)
+{
+  struct stat mnt_stat;
+  auto mnt_status = stat(mount_point.c_str(), &mnt_stat);
+  if (mnt_status) {
+    slurm_spank_log("Invalid mount point \"%s\"", mount_point.c_str());
+    return -ESPANK_ERROR;
+  }
+  if (!S_ISDIR(mnt_stat.st_mode)) {
+    slurm_spank_log("Invalid mount point \"%s\" is not a directory",
+                    mount_point.c_str());
+    return -ESPANK_ERROR;
+  }
+  // Check that the input squashfs file exists.
+  int sqsh_status = stat(squashfs_file.c_str(), &mnt_stat);
+  if (sqsh_status) {
+    slurm_spank_log("Invalid squashfs image \"%s\"", squashfs_file.c_str());
+    return -ESPANK_ERROR;
+  }
+  if (!S_ISREG(mnt_stat.st_mode)) {
+    slurm_spank_log("Invalid squashfs image \"%s\" is not a file",
+                    squashfs_file.c_str());
+    return -ESPANK_ERROR;
+  }
+
+  return ESPANK_SUCCESS;
+}
+
 int do_mount(spank_t spank, const std::string& mount_point, const std::string& squashfs_file) {
   // Check that the mount point exists.
   struct stat mnt_stat;
