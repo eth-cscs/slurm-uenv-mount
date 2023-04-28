@@ -6,7 +6,6 @@
 #include <tuple>
 #include <unistd.h>
 
-// // root version
 #include "mount.hpp"
 
 extern "C" {
@@ -21,6 +20,7 @@ extern "C" {
 namespace impl {
 int slurm_spank_init(spank_t sp, int ac, char **av);
 int slurm_spank_init_post_opt(spank_t sp, int ac, char **av);
+
 } // namespace impl
 
 //
@@ -51,6 +51,8 @@ int slurm_spank_init_post_opt(spank_t sp, int ac, char **av) {
 // Implementation
 //
 namespace impl {
+enum class parse_error { invalid_path };
+
 #define DEFAULT_MOUNT_POINT "/user-environment"
 struct arg_pack {
   std::string mount_point = DEFAULT_MOUNT_POINT;
@@ -76,19 +78,6 @@ std::optional<std::string> getenv(spank_t sp, const char *var) {
   }
 
   throw ret;
-}
-
-/// if `path` is a relative path, prepend ${SLURM_SUBMIT_DIR}
-std::string make_abspath(spank_t sp, std::string path) {
-  if (path[0] == '/') {
-    return path;
-  }
-
-  auto submit_dir = getenv(sp, "SLURM_SUBMIT_DIR");
-  if (submit_dir->back() != '/') {
-    submit_dir->push_back('/');
-  }
-  return *submit_dir + path;
 }
 
 static spank_option mount_point_arg{
@@ -155,7 +144,46 @@ int slurm_spank_init(spank_t sp, int ac, char **av) {
   return ESPANK_SUCCESS;
 }
 
-int slurm_spank_init_post_opt(spank_t sp, int, char **av) {
+/// check if image, mountpoint is valid
+int init_post_opt_remote(spank_t sp) {
+  if (args.file) {
+    return do_mount(sp, args.mount_point, *args.file);
+  }
+  // check if sbatch/srun/salloc was called inside squashfs-run tty
+  std::optional<std::string> env_file, env_mount_point;
+  try {
+    std::tie(env_file, env_mount_point) = get_squashfs_run_env(sp);
+  } catch (spank_err_t err) {
+    slurm_error("%s", spank_strerror(err));
+    return err;
+  }
+  if (env_file && env_mount_point) {
+    return do_mount(sp, *env_mount_point, *env_file);
+  }
+  return ESPANK_SUCCESS;
+}
+
+/// check if image/mountpoint are valid
+int init_post_opt_local_allocator(spank_t sp) {
+  if (args.file) {
+    return check_mount_file_is_valid(args.mount_point, *args.file);
+  }
+  // check if sbatch/srun/salloc was called inside squashfs-run tty
+  std::optional<std::string> env_file, env_mount_point;
+  try {
+    std::tie(env_file, env_mount_point) = get_squashfs_run_env(sp);
+  } catch (spank_err_t err) {
+    slurm_error("%s", spank_strerror(err));
+    return err;
+  }
+  if (env_file && env_mount_point) {
+    return check_mount_file_is_valid(*env_mount_point, *env_file);
+  }
+
+  return ESPANK_SUCCESS;
+}
+
+int slurm_spank_init_post_opt(spank_t sp, int ac, char **av) {
 
   if (!args.file && args.mount_flag_present) {
     slurm_error(
@@ -163,24 +191,18 @@ int slurm_spank_init_post_opt(spank_t sp, int, char **av) {
     return -ESPANK_ERROR;
   }
 
-  if (spank_context() == spank_context_t::S_CTX_REMOTE) {
-    if (args.file) {
-      return do_mount(sp, make_abspath(sp, args.mount_point),
-                      make_abspath(sp, *args.file));
+  switch (spank_context()) {
+    case spank_context_t::S_CTX_REMOTE: {
+      return init_post_opt_remote(sp);
     }
-
-    // check if sbatch/srun/salloc was called inside squashfs-run tty
-    std::optional<std::string> env_file, env_mount_point;
-    try {
-      std::tie(env_file, env_mount_point) = get_squashfs_run_env(sp);
-    } catch (spank_err_t err) {
-      slurm_error("%s", spank_strerror(err));
-      return err;
+    case spank_context_t::S_CTX_LOCAL:
+    case spank_context_t::S_CTX_ALLOCATOR: {
+      return init_post_opt_local_allocator(sp);
     }
-    if (env_file && env_mount_point) {
-      return do_mount(sp, *env_mount_point, *env_file);
-    }
+    default:
+      break;
   }
+
   return ESPANK_SUCCESS;
 }
 
