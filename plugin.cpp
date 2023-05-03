@@ -168,18 +168,8 @@ int init_post_opt_local_allocator(spank_t sp) {
   if (args.file) {
     return check_mount_file_is_valid(args.mount_point, *args.file);
   }
-  // check if sbatch/srun/salloc was called inside squashfs-run tty
-  std::optional<std::string> env_file, env_mount_point;
-  try {
-    std::tie(env_file, env_mount_point) = get_squashfs_run_env(sp);
-  } catch (spank_err_t err) {
-    slurm_error("%s", spank_strerror(err));
-    return err;
-  }
-  if (env_file && env_mount_point) {
-    return check_mount_file_is_valid(*env_mount_point, *env_file);
-  }
-
+  // env UENV_MOUNT_FILE, UENV_MOUNT_POINT doesn't require to be checked,
+  // they are guaranteed to be absolute paths and have been mounted already
   return ESPANK_SUCCESS;
 }
 
