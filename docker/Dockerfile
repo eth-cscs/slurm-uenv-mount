@@ -21,6 +21,8 @@ RUN zypper install -y\
     liblz4-devel\
     libzstd-devel\
     lzo-devel\
+    openssl\
+    libopenssl-devel\
     zlib-devel\
     htop\
     nnn\
@@ -30,15 +32,32 @@ RUN zypper install -y\
     psutils\
     strace
 
+# install python
+RUN curl -O https://www.python.org/ftp/python/3.10.11/Python-3.10.11.tgz \
+    && tar xzvf Python-3.10.11.tgz \
+    && cd Python-3.10.11 \
+    && ./configure \
+    && make install -j \
+    && cd ../ && rm -r Python-3.10.11
+RUN zypper --non-interactive rm libopenssl-devel
+
+# rpmbuild > /usr/lib/rpm/macros.d/macros.meson are missing here ...
+RUN python3 -m pip install --upgrade pip && python3 -m pip install meson ninja
+RUN curl https://raw.githubusercontent.com/mesonbuild/meson/master/data/macros.meson -o /usr/lib/rpm/macros.d/macros.meson
+
+# rpm build expects meson in /usr/bin/meson
+RUN ln -s /usr/local/bin/meson /usr/bin/meson
+
 RUN wget https://github.com/vasi/squashfuse/archive/refs/tags/0.1.105.tar.gz \
     && tar xf 0.1.105.tar.gz \
     && cd squashfuse-0.1.105 || exit 1 \
     && ./autogen.sh && ./configure --prefix=/usr/local && sudo make install
 
 RUN --mount=type=bind,source=./,target=/slurm-uenv-mount \
-    mkdir /slurm-uenv-mount-BUILD && cd /slurm-uenv-mount-BUILD \
-    && make -f /slurm-uenv-mount/Makefile && make -f /slurm-uenv-mount/Makefile install \
-    && echo "required /usr/lib64/libslurm-uenv-mount.so" > /etc/slurm/plugstack.conf
+    meson setup /slurm-uenv-mount uenv-build \
+    && meson compile -C uenv-build \
+    && meson install -C uenv-build \
+    && echo "required /usr/local/lib64/libslurm-uenv-mount.so" > /etc/slurm/plugstack.conf
 
 RUN mkdir /user-environment
 
