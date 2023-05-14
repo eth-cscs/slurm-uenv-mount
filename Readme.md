@@ -49,19 +49,10 @@ srun --uenv-file=/path/to/another-store.sqfs --uenv-mount=/different-user-enviro
 
 ## Building the plugin
 
-Run `make` in the top level source code directory.  Compilation depends on
-`slurm/slurm.h` existing in a standard include path. Otherwise, one needs to
-add `-I/path/to/include` to `CXXFLAGS` in `Makefile`. This results in the single
-library file `libslurm-uenv-mount.so`.
+Meson is used as build system. Run `meson setup builddir`, `meson compile -C
+builddir`, or `meson install -C builddir` to install `libslurm-uenv-mount.so`.
 
-Out-of-source compilation is supported by the `Makefile`. Simply run `make -f
-/path/to/Makefile [target]` in another directory.
-
-## Installation
-
-Run `make install` after building the plugin to copy it to the system library
-directory. By default this is under `/usr/lib64` but can be changed by editing
-the `Makefile` or with `make libdir=/path/to/libdir`.
+## Manual Installation
 
 To enable the plugin, SLURM needs to know where the library is located. This is
 provided via the file named by the `PlugStackConfig` option in `slurm.conf`. Typically,
@@ -76,7 +67,7 @@ See [slurm.conf](https://slurm.schedmd.com/slurm.conf.html#OPT_PlugStackConfig) 
 [spank](https://slurm.schedmd.com/spank.html#SECTION_CONFIGURATION) documentation for details.
 
 
-## Redistribution
+## TODO Redistribution
 
 Build an RPM source package using `make rpm`. The resulting RPM is located in the current directory
 under `rpm/SRPMS/`.
