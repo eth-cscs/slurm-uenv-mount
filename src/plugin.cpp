@@ -5,8 +5,11 @@
 #include <string>
 #include <tuple>
 #include <unistd.h>
+#include <vector>
 
+#include "config.hpp"
 #include "mount.hpp"
+#include "parse_args.hpp"
 
 extern "C" {
 #include <slurm/slurm_errno.h>
@@ -51,13 +54,9 @@ int slurm_spank_init_post_opt(spank_t sp, int ac, char **av) {
 // Implementation
 //
 namespace impl {
-enum class parse_error { invalid_path };
-
-#define DEFAULT_MOUNT_POINT "/user-environment"
 struct arg_pack {
-  std::string mount_point = DEFAULT_MOUNT_POINT;
-  bool mount_flag_present = false;
-  std::optional<std::string> file;
+  std::string uenv_arg;
+  bool uenv_flag_present = false;
   bool run_prologue = false;
 };
 
@@ -67,6 +66,16 @@ static arg_pack args{};
 std::optional<std::string> getenv(spank_t sp, const char *var) {
   const int len = 1024;
   char buf[len];
+
+  if (spank_context() == spank_context_t::S_CTX_LOCAL ||
+      spank_context() == spank_context_t::S_CTX_ALLOCATOR) {
+    auto ret = std::getenv(var);
+    if (ret == nullptr) {
+      return std::nullopt;
+    }
+    return ret;
+  }
+
   spank_err_t ret = spank_getenv(sp, var, buf, len);
 
   if (ret == ESPANK_ENV_NOEXIST) {
@@ -77,38 +86,21 @@ std::optional<std::string> getenv(spank_t sp, const char *var) {
     return std::string{buf};
   }
 
+  slurm_spank_log("getenv failed");
   throw ret;
 }
 
-static spank_option mount_point_arg{
-    (char *)"uenv-mount",
-    (char *)"<path>",
-    (char *)"path whence the environment is mounted: "
-            "default " DEFAULT_MOUNT_POINT,
+static spank_option uenv_arg{
+    (char *)"uenv",
+    (char *)"<file>[:mount-point][,<file:mount-point>]*",
+    (char *)"A comma seprated list of file and mountpoint, default mount-point "
+            "is " DEFAULT_MOUNT_POINT,
     1, // requires an argument
     0, // plugin specific value to pass to the callback (unnused)
     [](int val, const char *optarg, int remote) -> int {
-      slurm_verbose("uenv-mount: val:%d optarg:%s remote:%d", val, optarg,
-                    remote);
-      // todo: parse string to validate that the path exists
-      // todo: parse string to validate that it is a valid and allowed path
-      args.mount_point = optarg;
-      args.mount_flag_present = true;
-      return ESPANK_SUCCESS;
-    }};
-
-static spank_option file_arg{
-    (char *)"uenv-file",
-    (char *)"<path>",
-    (char *)"the squashfs file with the image to mount:",
-    1, // requires an argument
-    0, // plugin specific value to pass to the callback (unnused)
-    [](int val, const char *optarg, int remote) -> int {
-      slurm_verbose("uenv-mount: val:%d optarg:%s remote:%d", val, optarg,
-                    remote);
-      // check that file exists happens in do_mount
-      args.file = std::string{optarg};
-      args.file = std::string{optarg};
+      slurm_verbose("uenv: val:%d optarg:%s remote:%d", val, optarg, remote);
+      args.uenv_flag_present = true;
+      args.uenv_arg = optarg;
       return ESPANK_SUCCESS;
     }};
 
@@ -119,23 +111,19 @@ static spank_option prolog_arg{
     0, // takes an argument
     0, // plugin specific value to pass to the callback (unnused)
     [](int val, const char *optarg, int remote) -> int {
-      slurm_verbose("uenv-mount: val:%d optarg:%s remote:%d", val, optarg,
-                    remote);
+      slurm_verbose("uenv-mount: val:%d optarg:%s remote:%d", val, optarg, remote);
       args.run_prologue = false;
       return ESPANK_SUCCESS;
     }};
 
 /// detect if srun/sbatch has been called from an squashfs-run/squashfs-mount
-std::tuple<std::optional<std::string>, std::optional<std::string>>
-get_squashfs_run_env(spank_t sp) {
-  auto env_sqfs_file = getenv(sp, ENV_MOUNT_FILE);
-  auto env_mount_point = getenv(sp, ENV_MOUNT_POINT);
-  return std::make_tuple(env_sqfs_file, env_mount_point);
+std::optional<std::string> get_uenv_env(spank_t sp) {
+  return getenv(sp, UENV_MOUNT_LIST);
 }
 
 int slurm_spank_init(spank_t sp, int ac, char **av) {
 
-  for (auto arg : {&mount_point_arg, &file_arg, &prolog_arg}) {
+  for (auto arg : {&uenv_arg, &prolog_arg}) {
     if (auto status = spank_option_register(sp, arg)) {
       return status;
     }
@@ -145,39 +133,36 @@ int slurm_spank_init(spank_t sp, int ac, char **av) {
 }
 
 /// check if image, mountpoint is valid
-int init_post_opt_remote(spank_t sp) {
-  if (args.file) {
-    return do_mount(sp, args.mount_point, *args.file);
-  }
-  // check if sbatch/srun/salloc was called inside squashfs-run tty
-  std::optional<std::string> env_file, env_mount_point;
-  try {
-    std::tie(env_file, env_mount_point) = get_squashfs_run_env(sp);
-  } catch (spank_err_t err) {
-    slurm_error("%s", spank_strerror(err));
-    return err;
-  }
-  if (env_file && env_mount_point) {
-    return do_mount(sp, *env_mount_point, *env_file);
-  }
-  return ESPANK_SUCCESS;
+int init_post_opt_remote(spank_t sp,
+                         const std::vector<mount_entry> &mount_entries) {
+  return do_mount(sp, mount_entries);
 }
 
 /// check if image/mountpoint are valid
-int init_post_opt_local_allocator(spank_t sp) {
-  if (args.file) {
-    return check_mount_file_is_valid(args.mount_point, *args.file);
+int init_post_opt_local_allocator(
+    spank_t sp, const std::vector<mount_entry> &mount_entries) {
+  bool invalid_path = false;
+  for (auto &entry : mount_entries) {
+    switch (entry.p) {
+    case protocol::file: {
+      if (!is_valid_image(entry.image_path)) {
+        invalid_path = true;
+        slurm_error("Image does not exist: %s", entry.image_path.c_str());
+      }
+      if (!is_valid_mountpoint(entry.mount_point)) {
+        invalid_path = true;
+        slurm_error("Mountpoint is invalid: %s", entry.mount_point.c_str());
+      }
+      break;
+    }
+    default:
+      slurm_error("Unsupported protocol: %s", entry.image_path.c_str());
+      return -ESPANK_ERROR;
+    }
   }
-  // check if sbatch/srun/salloc was called inside squashfs-run tty
-  std::optional<std::string> env_file, env_mount_point;
-  try {
-    std::tie(env_file, env_mount_point) = get_squashfs_run_env(sp);
-  } catch (spank_err_t err) {
-    slurm_error("%s", spank_strerror(err));
-    return err;
-  }
-  if (env_file && env_mount_point) {
-    return check_mount_file_is_valid(*env_mount_point, *env_file);
+
+  if (invalid_path) {
+    return -ESPANK_ERROR;
   }
 
   return ESPANK_SUCCESS;
@@ -185,22 +170,39 @@ int init_post_opt_local_allocator(spank_t sp) {
 
 int slurm_spank_init_post_opt(spank_t sp, int ac, char **av) {
 
-  if (!args.file && args.mount_flag_present) {
-    slurm_error(
-        "--uenv-mount is only allowed to be used together with --uenv-file.");
-    return -ESPANK_ERROR;
+  std::vector<mount_entry> mount_entries;
+  if (args.uenv_flag_present) {
+    // parse --uenv argument
+    auto parsed_uenv_arg = parse_arg(args.uenv_arg);
+    if (!parsed_uenv_arg) {
+      slurm_error("%s", parsed_uenv_arg.error().what());
+      return -ESPANK_ERROR;
+    }
+    mount_entries = *parsed_uenv_arg;
+  } else {
+    // check if UENV_MOUNT_LIST is set in environment
+    if (auto uenv_mount_list = get_uenv_env(sp)) {
+      auto parsed_uenv_arg = parse_arg(*uenv_mount_list);
+      if (!parsed_uenv_arg) {
+        slurm_error("%s", parsed_uenv_arg.error().what());
+        return -ESPANK_ERROR;
+      }
+      mount_entries = *parsed_uenv_arg;
+    }
   }
 
   switch (spank_context()) {
-    case spank_context_t::S_CTX_REMOTE: {
-      return init_post_opt_remote(sp);
-    }
-    case spank_context_t::S_CTX_LOCAL:
-    case spank_context_t::S_CTX_ALLOCATOR: {
-      return init_post_opt_local_allocator(sp);
-    }
-    default:
-      break;
+  case spank_context_t::S_CTX_REMOTE: {
+    // mount images at specified locations
+    return init_post_opt_remote(sp, mount_entries);
+  }
+  case spank_context_t::S_CTX_LOCAL:
+  case spank_context_t::S_CTX_ALLOCATOR: {
+    // valide that images and mountpoints exist
+    return init_post_opt_local_allocator(sp, mount_entries);
+  }
+  default:
+    break;
   }
 
   return ESPANK_SUCCESS;
