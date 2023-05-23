@@ -56,7 +56,7 @@ builddir`, or `meson install -C builddir` to install `libslurm-uenv-mount.so`.
 
 To enable the plugin, SLURM needs to know where the library is located. This is
 provided via the file named by the `PlugStackConfig` option in `slurm.conf`. Typically,
-this file is called `plugstack.conf` and is located in the same directoy as `slurm.conf`.
+this file is called `plugstack.conf` and is located in the same directory as `slurm.conf`.
 
 For example, one can append to the file `/etc/slurm/plugstack.conf` the line
 ```
@@ -67,7 +67,14 @@ See [slurm.conf](https://slurm.schedmd.com/slurm.conf.html#OPT_PlugStackConfig) 
 [spank](https://slurm.schedmd.com/spank.html#SECTION_CONFIGURATION) documentation for details.
 
 
-## TODO Redistribution
+## Redistribution
 
-Build an RPM source package using `make rpm`. The resulting RPM is located in the current directory
-under `rpm/SRPMS/`.
+A script to create an rpm package is provided in `rpm/make-rpm.sh`:
+
+```bash
+    tmpdir=$(mktemp -d)
+    # create rpm directory structure / srpm in $tmpdir and compile the binary rpm
+    rpm/make-rpm.sh ${tmpdir}
+```
+
+See `make-rpm.sh -h` for more options.

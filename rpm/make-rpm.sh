@@ -65,6 +65,11 @@ if [ -z "$dstdir" ]; then
   exit 1
 fi
 
+# Print the parsed arguments
+echo "skip_bin=$skip_bin"
+echo "dstdir=$dstdir"
+echo "RPM_SLURM_VERSION=$RPM_SLURM_VERSION"
+
 set -euo pipefail
 
 # absolute path to this script (where the spec file is located)

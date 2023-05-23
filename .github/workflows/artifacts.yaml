@@ -28,11 +28,12 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: |
-          make RPM_SLURM_VERSION=${SLURM_VER} rpm
-          sudo rpmbuild --rebuild "$(find rpm/SRPMS -name '*.rpm' -type f -print -quit)" --define "_topdir $(pwd)/rpm"
+          _rpm_build_dir=/tmp/uenv-rpm
+          mkdir -p ${_rpm_build_dir}
+          ./rpm/make-rpm.sh --slurm-version "${SLURM_VER}" ${_rpm_build_dir}
           # --nodeps is required since the ci container has handbuilt slurm (not installed via rpm)
-          sudo rpm --install --nodeps "$(find rpm/RPMS -name '*.rpm' -type f -print -quit)"
-          find rpm -name '*.rpm' -type f -exec cp {} . \;
+          sudo rpm --install --nodeps "$(find ${_rpm_build_dir} -name '*.rpm' -type f -print -quit)"
+          find ${_rpm_build_dir} -name '*.rpm' -type f -exec cp {} . \;
       - name: upload-rpm
         uses: actions/upload-artifact@v3
         with:
