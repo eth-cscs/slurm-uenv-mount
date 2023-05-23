@@ -7,7 +7,7 @@ cd /tmp/build-rpm
 
 _SLURM_VER=$(srun --version | sed 's/slurm //')
 
-/slurm-uenv-mount/rpm/prepare-rpm.sh --slurm-version "${_SLURM_VER}" /tmp/src-rpm
+/slurm-uenv-mount/rpm/make-rpm.sh --slurm-version "${_SLURM_VER}" /tmp/src-rpm
 
 find /tmp/src-rpm -name '*.rpm' -type f -exec cp {} . \;
 

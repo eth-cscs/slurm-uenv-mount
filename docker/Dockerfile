@@ -4,8 +4,6 @@ FROM ${DOCKER_CONTAINER}
 RUN zypper install -y\
     fuse3-devel\
     squashfs\
-    mpich\
-    mpich-devel\
     vim\
     libmount-devel\
     wget\
@@ -45,6 +43,15 @@ RUN zypper --non-interactive rm libopenssl-devel
 RUN python3 -m pip install --upgrade pip && python3 -m pip install meson ninja
 RUN curl https://raw.githubusercontent.com/mesonbuild/meson/master/data/macros.meson -o /usr/lib/rpm/macros.d/macros.meson
 
+# download bash-bats
+RUN curl -L https://github.com/bats-core/bats-core/archive/refs/tags/v1.9.0.tar.gz | tar xz
+RUN ln -s /bats-core-1.9.0/bin/bats /usr/bin/bats
+
+RUN mkdir bats-helpers
+RUN git clone --depth 1 https://github.com/bats-core/bats-assert.git bats-helpers/bats-assert
+RUN git clone --depth 1 https://github.com/bats-core/bats-support.git bats-helpers/bats-support
+ENV BATS_LIB_PATH /bats-helpers
+
 # rpm build expects meson in /usr/bin/meson
 RUN ln -s /usr/local/bin/meson /usr/bin/meson
 
@@ -60,6 +67,8 @@ RUN --mount=type=bind,source=./,target=/slurm-uenv-mount \
     && echo "required /usr/local/lib64/libslurm-uenv-mount.so" > /etc/slurm/plugstack.conf
 
 RUN mkdir /user-environment
+RUN mkdir /user-profilers
+RUN mkdir /user-tools
 
 RUN useradd testuser
 RUN mkdir -p /home/testuser

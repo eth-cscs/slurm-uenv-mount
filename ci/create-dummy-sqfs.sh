@@ -8,21 +8,30 @@ dd=$(mktemp -d)
 (
     umask 022
     cd "$dd" || exit
-    mkdir test
+    mkdir spack-install
     echo "This is file A" >> test/fileA.txt
     mkdir -p test/testdir
 )
 
-mksquashfs  "$dd"  /home/testuser/fs.sqfs -noappend && rm -r "$dd"
+mksquashfs  "$dd"  /home/testuser/binaries.sqfs -noappend && rm -r "$dd"
 
 dd=$(mktemp -d)
 (
     umask 022
     cd "$dd" || exit
-    mkdir test
-    echo "This is file A" >> test/fileB.txt
-    mkdir -p test/testdir
+    mkdir profilers
+    echo "profiler stack" >> profilers/fileB.txt
 )
-mksquashfs  "$dd"  /home/testuser/fs2.sqfs -noappend && rm -r "$dd"
+mksquashfs  "$dd"  /home/testuser/profilers.sqfs -noappend && rm -r "$dd"
+
+dd=$(mktemp -d)
+(
+    umask 022
+    cd "$dd" || exit
+    mkdir tools
+    echo "tools stack" >> tools/fileB.txt
+)
+mksquashfs  "$dd"  /home/testuser/tools.sqfs -noappend && rm -r "$dd"
 EOF
+
 )
