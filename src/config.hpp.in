@@ -1,0 +1,3 @@
+#pragma once
+
+#define DEFAULT_MOUNT_POINT "@default_mount_point@"

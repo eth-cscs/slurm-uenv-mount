@@ -2,13 +2,19 @@ extern "C" {
 #include <slurm/spank.h>
 }
 #include <string>
+#include "parse_args.hpp"
 
-#define ENV_MOUNT_FILE "UENV_MOUNT_FILE"
-#define ENV_MOUNT_POINT "UENV_MOUNT_POINT"
+#define UENV_MOUNT_LIST "UENV_MOUNT_LIST"
 
 namespace impl {
 
-int check_mount_file_is_valid(const std::string& mount_point, const std::string& squashfs_file);
-int do_mount(spank_t spank, const std::string& mount_point, const std::string& squashfs_file);
+/// check if image is a valid path to a file
+bool is_valid_image(const std::string& squashfs_file);
+
+/// check if mountpoint is an existent directory
+bool is_valid_mountpoint(const std::string &mount_point);
+
+/// mount images and export env variable UENV_MOUNT_LIST
+int do_mount(spank_t spank, const std::vector<mount_entry>& mount_entries);
 
 } // namespace impl
