@@ -12,15 +12,25 @@ A [slurm](https://slurm.schedmd.com/) installation.
 
 ## Usage
 
-The plugin is activated by passing the flag `--uenv-file=FILE` to any of the
-standard SLURM job submission commands (e.g., `sbatch`, `srun`, `salloc`). `FILE`
-must be a SquashFS image.
+The plugin is activated by passing the option `--uenv` to any of the standard SLURM job submission
+commands (e.g., `sbatch`, `srun`, `salloc`). This option accepts a comma-separated list of
+squashfs image and mountpoint pairs:
+
+```bash
+srun --uenv=<file>:[<mountpoint>] CMD
+srun --uenv=<file>:[<mountpoint>],<file>:[<mountpoint>]... CMD
+```
+
+`<file>` must be a SquashFS image. `<file>` and `<mountpoint>` must be
+absolute paths. `<mountpoint>` defaults to `/user-environment` if omitted.
+
+Multiple images and mount points can be passed as a comma separated list:
+```bash
+srun --uenv=/scratch/binaries.sqfs,/scratch/profilers.sqfs:/user-profilers CMD
+```
 
 Command line flags given to the plugin, for example via `#SBATCH`, are inherited
 by subsequent `srun` commands (unless overridden).
-
-The mount point can be changed from the default value of `/user-environment` using
-the flag `--uenv-mount`.
 
 If a user environment is already active, the file and mount point will be
 inherited by subsequent SLURM command unless explicitly overridden. If a
@@ -28,23 +38,23 @@ different mount point is desired, the file must also be given as an argument. A
 user environment is active if loaded with the `squashfs-mount` command or this
 plugin.
 
-**NOTE** Combining the the slurm-uenv-mount spank plugin with the old workflow, e.g. `srun --uenv-file=store.sqfs squashfs-run CMD` does not work.
+**NOTE** Combining the the slurm-uenv-mount spank plugin with the old workflow, e.g. `srun --uenv=store.sqfs squashfs-run CMD` does not work.
 
 
 ### Examples
 
 ```bash
-srun --uenv-file=/path/to/store.sqfs  [--uenv-mount=/user-environment] CMD
+srun --uenv=/path/to/store.sqfs:/user-environment CMD
 ```
 
 ```bash
-#SBATCH --uenv-file=/path/to/store.sqfs
+#SBATCH --uenv=/path/to/store.sqfs
 
 # store.sqfs mounted on /user-environment
 srun CMD
 
 # another-store.sqfs mounted on /different-user-environment. Nothing mounted on /user-environment(!)
-srun --uenv-file=/path/to/another-store.sqfs --uenv-mount=/different-user-environment CMD
+srun --uenv=/path/to/another-store.sqfs:/different-user-environment CMD
 ```
 
 ## Building the plugin
