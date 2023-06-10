@@ -42,6 +42,10 @@ parse_arg(const std::string &arg) {
   std::vector<mount_entry> entries;
   std::vector<std::string> arguments = split(arg, ',');
 
+  if(arguments.empty()) {
+    return util::unexpected("No mountpoints given.");
+  }
+
   for (auto &entry : arguments) {
     std::smatch match_pieces;
     if (std::regex_match(entry, match_pieces, protocol_pattern)) {
