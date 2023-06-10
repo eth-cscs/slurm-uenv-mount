@@ -111,3 +111,13 @@ EOF
     run_srun_unchecked --uenv=a:b:c:/user-tools true
     assert_output --partial 'Invalid syntax for --uenv'
 }
+
+@test "empty_argument1" {
+    run_srun_unchecked --uenv='' true
+    assert_output --partial 'No mountpoints given.'
+}
+
+@test "empty_argument2" {
+    run_srun_unchecked --uenv=,,, true
+    assert_output --partial 'No mountpoints given.'
+}
