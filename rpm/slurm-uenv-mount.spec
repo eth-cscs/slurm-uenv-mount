@@ -1,6 +1,6 @@
 Name:           slurm-uenv-mount
 Version:        UENVMNT_VERSION
-Release:        SLURM_VERSION
+Release:        RPM_SLURM_VERSION
 Summary:        SLURM spank plugin to mount squashfs images.
 Prefix:         /usr
 Requires:       slurm = RPM_SLURM_VERSION

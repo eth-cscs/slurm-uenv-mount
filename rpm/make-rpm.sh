@@ -93,7 +93,7 @@ mkdir -p "${dstdir}"
 
   cp "${_scriptdir}/slurm-uenv-mount.spec" SPECS/
   sed -i "s|UENVMNT_VERSION|${SLURM_UENV_MOUNT_VERSION}|g" SPECS/slurm-uenv-mount.spec
-  sed -i "s|SLURM_VERSION|${RPM_SLURM_VERSION}|g" SPECS/slurm-uenv-mount.spec
+  sed -i "s|RPM_SLURM_VERSION|${RPM_SLURM_VERSION}|g" SPECS/slurm-uenv-mount.spec
 
   # create src rpm
   rpmbuild -bs --define "_topdir ." SPECS/slurm-uenv-mount.spec
