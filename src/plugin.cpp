@@ -57,7 +57,6 @@ namespace impl {
 struct arg_pack {
   std::string uenv_arg;
   bool uenv_flag_present = false;
-  bool run_prologue = false;
 };
 
 static arg_pack args{};
@@ -104,18 +103,6 @@ static spank_option uenv_arg{
       return ESPANK_SUCCESS;
     }};
 
-static spank_option prolog_arg{
-    (char *)"uenv-skip-prologue",
-    (char *)"none",
-    (char *)"ignore any environment prologue script",
-    0, // takes an argument
-    0, // plugin specific value to pass to the callback (unnused)
-    [](int val, const char *optarg, int remote) -> int {
-      slurm_verbose("uenv-mount: val:%d optarg:%s remote:%d", val, optarg, remote);
-      args.run_prologue = false;
-      return ESPANK_SUCCESS;
-    }};
-
 /// detect if srun/sbatch has been called from an squashfs-run/squashfs-mount
 std::optional<std::string> get_uenv_env(spank_t sp) {
   return getenv(sp, UENV_MOUNT_LIST);
@@ -123,10 +110,8 @@ std::optional<std::string> get_uenv_env(spank_t sp) {
 
 int slurm_spank_init(spank_t sp, int ac, char **av) {
 
-  for (auto arg : {&uenv_arg, &prolog_arg}) {
-    if (auto status = spank_option_register(sp, arg)) {
-      return status;
-    }
+  if (auto status = spank_option_register(sp, &uenv_arg)) {
+    return status;
   }
 
   return ESPANK_SUCCESS;
