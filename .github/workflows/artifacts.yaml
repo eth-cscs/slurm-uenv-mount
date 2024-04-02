@@ -15,8 +15,7 @@ jobs:
           - 20.11.9
           - 22.05.2
           - 22.05.6
-          - 23.02.6
-
+          - 23.02.7
     container:
       image: ghcr.io/eth-cscs/cache_docker/slurm-uenv-mount-tester-${{ matrix.version }}:latest
       credentials:
