@@ -11,15 +11,15 @@ _SLURM_VER=$(srun --version | sed 's/slurm //')
 
 find /tmp/src-rpm -name '*.rpm' -type f -exec cp {} . \;
 
-fname=$(ls *x86_64.rpm)
+fname=$(ls -- *$(uname -m).rpm)
 
 
 echo
-echo "RPM built. "
+echo "RPM built."
 echo
 
 echo "Copy from container:"
 echo
-printf "\tdocker compose cp slurm:$(realpath $fname) ."
+printf "\tdocker compose cp slurm:%s ." "$(realpath $fname)"
 echo
 echo
