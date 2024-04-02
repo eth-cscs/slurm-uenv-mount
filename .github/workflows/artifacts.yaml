@@ -18,7 +18,7 @@ jobs:
           - 23.02.6
 
     container:
-      image: ghcr.io/eth-cscs/slurm-uenv-mount-tester-${{ matrix.version }}:latest
+      image: ghcr.io/eth-cscs/cache_docker/slurm-uenv-mount-tester-${{ matrix.version }}:latest
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
