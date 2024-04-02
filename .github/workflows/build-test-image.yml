@@ -16,7 +16,7 @@ jobs:
           - 20.11.9
           - 22.05.2
           - 22.05.6
-          - 23.02.6
+          - 23.02.7
     env:
       base_tag:     ghcr.io/eth-cscs/slurm-container-${{ matrix.version }}:latest
       cache_tag:    ghcr.io/eth-cscs/cache_docker/slurm-uenv-mount-tester-${{ matrix.version }}:latest
