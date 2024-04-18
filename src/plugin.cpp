@@ -6,6 +6,7 @@
 #include <tuple>
 #include <unistd.h>
 #include <vector>
+#include <SQLiteCpp.h>
 
 #include "config.hpp"
 #include "mount.hpp"
