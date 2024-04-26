@@ -15,7 +15,11 @@ sqlitecpp_proj = subproject('sqlitecpp')
 sqlitecpp_dep = sqlitecpp_proj.get_variable('sqlitecpp_dep')
 
 shared_module('slurm-uenv-mount',
-              sources: ['src/plugin.cpp', 'src/mount.cpp', 'src/parse_args.cpp'],
+              sources: ['src/plugin.cpp',
+                        'src/mount.cpp',
+                        'src/parse_args.cpp',
+                        'src/datastore.cpp',
+                        'src/util/helper.cpp'],
               dependencies: [libmount_dep, sqlitecpp_dep],
               cpp_args: ['-Wall', '-Wpedantic'],
               install: true)

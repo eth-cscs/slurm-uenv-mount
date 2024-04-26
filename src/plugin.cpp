@@ -1,12 +1,10 @@
 #include <cstdlib>
-#include <cstring>
 #include <optional>
 #include <stdexcept>
 #include <string>
-#include <tuple>
 #include <unistd.h>
 #include <vector>
-#include <SQLiteCpp.h>
+#include <SQLiteCpp/SQLiteCpp.h>
 
 #include "config.hpp"
 #include "mount.hpp"
@@ -129,21 +127,13 @@ int init_post_opt_local_allocator(
     spank_t sp, const std::vector<mount_entry> &mount_entries) {
   bool invalid_path = false;
   for (auto &entry : mount_entries) {
-    switch (entry.p) {
-    case protocol::file: {
-      if (!is_valid_image(entry.image_path)) {
-        invalid_path = true;
-        slurm_error("Image does not exist: %s", entry.image_path.c_str());
-      }
-      if (!is_valid_mountpoint(entry.mount_point)) {
-        invalid_path = true;
-        slurm_error("Mountpoint is invalid: %s", entry.mount_point.c_str());
-      }
-      break;
+    if (!is_valid_image(entry.image_path)) {
+      invalid_path = true;
+      slurm_error("Image does not exist: %s", entry.image_path.c_str());
     }
-    default:
-      slurm_error("Unsupported protocol: %s", entry.image_path.c_str());
-      return -ESPANK_ERROR;
+    if (!is_valid_mountpoint(entry.mount_point)) {
+      invalid_path = true;
+      slurm_error("Mountpoint is invalid: %s", entry.mount_point.c_str());
     }
   }
 

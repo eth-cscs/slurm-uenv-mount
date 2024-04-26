@@ -83,11 +83,6 @@ int do_mount(spank_t spank, const std::vector<mount_entry> &mount_entries) {
   }
 
   for (auto &entry : mount_entries) {
-    if (entry.p != protocol::file) {
-      slurm_spank_log("Image must be given as local file (jfrog://, https:// "
-                      "not yet implemented)");
-      return -ESPANK_ERROR;
-    }
     std::string mount_point = entry.mount_point;
     std::string squashfs_file = entry.image_path;
 

@@ -9,7 +9,7 @@ namespace impl {
 enum class protocol { file, https, jfrog };
 
 struct mount_entry {
-  enum protocol p;
+  // enum protocol p;
   std::string image_path;
   std::string mount_point;
 };
