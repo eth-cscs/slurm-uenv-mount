@@ -11,15 +11,15 @@ configure_file(input : 'src/config.hpp.in',
                configuration : conf_data)
 
 libmount_dep = dependency('mount')
-sqlitecpp_proj = subproject('sqlitecpp')
-sqlitecpp_dep = sqlitecpp_proj.get_variable('sqlitecpp_dep')
+sqlite3_dep = dependency('sqlite3')
 
 shared_module('slurm-uenv-mount',
               sources: ['src/plugin.cpp',
                         'src/mount.cpp',
                         'src/parse_args.cpp',
+                        'src/util/sqlite.cpp',
                         'src/datastore.cpp',
                         'src/util/helper.cpp'],
-              dependencies: [libmount_dep, sqlitecpp_dep],
+              dependencies: [libmount_dep, sqlite3_dep],
               cpp_args: ['-Wall', '-Wpedantic'],
               install: true)
