@@ -1,17 +1,8 @@
-#include "SQLiteCpp/Database.h"
-#include <SQLiteCpp/SQLiteCpp.h>
-
-#include "SQLiteCpp/Statement.h"
 #include "datastore.hpp"
 #include "util/helper.hpp"
-
-class DataStore {
-public:
-  DataStore(std::string path) : db(path, SQLite::OPEN_READONLY) {}
-
-private:
-  SQLite::Database db;
-};
+#include "util/sqlite.hpp"
+#include <set>
+#include <stdexcept>
 
 /*
  return dictionary{"name", "version", "tag", "sha" } from a uenv description
@@ -51,15 +42,14 @@ uenv_desc parse_uenv_string(const std::string &str) {
 
 std::string find_repo_image(const uenv_desc &desc) {
   std::string dbpath = "/scratch/index.db";
-  SQLite::Database db(dbpath, SQLite::OPEN_READONLY);
+  SQLiteDB db(dbpath, sqlite_open::readonly);
 
   if (desc.sha) {
     if (desc.sha.value().size() < 64) {
-      SQLite::Statement query(db, "SELECT * FROM records WHERE id = ?");
-      query.bind(1, desc.sha.value());
+      SQLiteStatement query(db, "SELECT * FROM records WHERE id = " + desc.sha.value());
+      // query.bind(1, desc.sha.value());
     } else {
-      SQLite::Statement query(db, "SELECT * FROM records WHERE sha256 = ?");
-      query.bind(1, desc.sha.value());
+      SQLiteStatement query(db, "SELECT * FROM records WHERE sha256 = " + desc.sha.value());
     }
   } else {
     std::string query_str = "SELECT * FROM records WHERE ";
@@ -79,13 +69,18 @@ std::string find_repo_image(const uenv_desc &desc) {
       }
       query_str += filter[i].first + " = " + filter[i].second;
     }
-    SQLite::Statement query(db, query_str);
+    SQLiteStatement query(db, query_str);
 
-    // get all results:
-    while(query.executeStep()) {
-      // TODO
+    // get all results
+    std::set<std::string> shas;
+    while(query.execute()) {
+      int aIndex = query.getColumnIndex("sha256");
+      shas.insert(query.getColumn(aIndex));
+    }
+    if(shas.size() > 1) {
+      throw std::runtime_error("nope");
     }
   }
 
-  return "no!";
+  return "TODO";
 }
