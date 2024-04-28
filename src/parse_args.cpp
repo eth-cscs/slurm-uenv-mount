@@ -36,7 +36,7 @@ std::vector<std::string> split(const std::string &s, char delim) {
 }
 
 util::expected<std::vector<mount_entry>, std::runtime_error>
-parse_arg(const std::string &arg, const std::string &uenv_repo_path) {
+parse_arg(const std::string &arg, std::optional<std::string> uenv_repo_path) {
   std::vector<std::string> arguments = split(arg, ',');
 
   if (arguments.empty()) {
@@ -59,7 +59,11 @@ parse_arg(const std::string &arg, const std::string &uenv_repo_path) {
       mount_entries.emplace_back(mount_entry{image_path, mount_point});
     } else if (std::regex_match(entry, match, repo_pattern)) {
       uenv_desc desc = parse_uenv_string(entry);
-      auto res = find_repo_image(desc, uenv_repo_path);
+      if(!uenv_repo_path) {
+        // TODO: print a warning
+        continue;
+      }
+      auto res = find_repo_image(desc, uenv_repo_path.value());
       std::string mount_point = get_mount_point(match[4]);
       if (!res.has_value()) {
         return util::unexpected(res.error());

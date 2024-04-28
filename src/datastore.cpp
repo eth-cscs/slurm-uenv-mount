@@ -5,7 +5,7 @@
 #include "util/helper.hpp"
 #include <set>
 #include <sstream>
-#include <stdexcept>
+
 /*
  return dictionary{"name", "version", "tag", "sha" } from a uenv description
  string
@@ -59,7 +59,6 @@ struct cmp {
 
 util::expected<std::string, std::string>
 find_repo_image(const uenv_desc &desc, const std::string &repo_path) {
-  // TODO: also filter uarch
   std::string dbpath = repo_path + "/index.db";
   SQLiteDB db(dbpath, sqlite_open::readonly);
 

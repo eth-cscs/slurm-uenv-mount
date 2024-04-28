@@ -106,13 +106,18 @@ std::optional<std::string> get_uenv_env(spank_t sp) {
   return getenv(sp, UENV_MOUNT_LIST);
 }
 
-std::string get_uenv_repo_path(spank_t sp) {
+/// return uenv_repo_path, either from UENV_REPO_PATH or $SCRATCH/.uenv-images
+/// it doesn't check if paths exist
+std::optional<std::string> get_uenv_repo_path(spank_t sp) {
   auto path = getenv(sp, UENV_REPO_PATH_VARNAME);
   if (path) {
     return path.value();
   }
 
   auto scratch = getenv(sp, "SCRATCH");
+  if(!scratch) {
+    return std::nullopt;
+  }
   return scratch.value() + "/.uenv-images";
 }
 
@@ -158,10 +163,10 @@ int init_post_opt_local_allocator(
 int slurm_spank_init_post_opt(spank_t sp, int ac [[maybe_unused]],
                               char **av [[maybe_unused]]) {
 
-  std::string uenv_repo_path = get_uenv_repo_path(sp);
+  auto uenv_repo_path = get_uenv_repo_path(sp);
   std::vector<mount_entry> mount_entries;
   if (args.uenv_flag_present) {
-    // parse --uenv argument
+    // parse --uenv argument, jfrog/oras is optional
     auto parsed_uenv_arg = parse_arg(args.uenv_arg, uenv_repo_path);
     if (!parsed_uenv_arg) {
       slurm_error("%s", parsed_uenv_arg.error().what());
@@ -171,7 +176,8 @@ int slurm_spank_init_post_opt(spank_t sp, int ac [[maybe_unused]],
   } else {
     // check if UENV_MOUNT_LIST is set in environment
     if (auto uenv_mount_list = get_uenv_env(sp)) {
-      auto parsed_uenv_arg = parse_arg(*uenv_mount_list, uenv_repo_path);
+      // UENV_MOUNT_LIST is assumed to be fully processed, we don't query sqlite here
+      auto parsed_uenv_arg = parse_arg(*uenv_mount_list, /*uenv repo*/ std::nullopt);
       if (!parsed_uenv_arg) {
         slurm_error("%s", parsed_uenv_arg.error().what());
         return -ESPANK_ERROR;
