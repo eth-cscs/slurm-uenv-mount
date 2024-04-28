@@ -60,6 +60,11 @@ struct cmp {
 util::expected<std::string, std::string>
 find_repo_image(const uenv_desc &desc, const std::string &repo_path) {
   std::string dbpath = repo_path + "/index.db";
+  // check if dbpath exists.
+  if (!is_file(dbpath)) {
+    return util::unexpected("Can't open uenv repo. " + dbpath +
+                            " is not a file.");
+  }
   SQLiteDB db(dbpath, sqlite_open::readonly);
 
   // get all results
@@ -93,6 +98,7 @@ find_repo_image(const uenv_desc &desc, const std::string &repo_path) {
       }
       query_str += filter[i].first + " = " + filter[i].second;
     }
+
     SQLiteStatement query(db, query_str);
 
     while (query.execute()) {

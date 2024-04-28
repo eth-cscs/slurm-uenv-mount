@@ -9,7 +9,6 @@ std::map<sqlite_open, int> sqlite_oflag = {
 class SQLiteError : public std::exception {
 public:
   SQLiteError(const std::string &msg) : msg(msg) {}
-
   const char *what() const noexcept override { return msg.c_str(); }
 
 private:

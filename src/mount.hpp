@@ -9,7 +9,7 @@ extern "C" {
 namespace impl {
 
 /// check if image is a valid path to a file
-bool is_valid_image(const std::string& squashfs_file);
+bool is_file(const std::string& fname);
 
 /// check if mountpoint is an existent directory
 bool is_valid_mountpoint(const std::string &mount_point);

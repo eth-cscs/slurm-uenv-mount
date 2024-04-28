@@ -143,7 +143,7 @@ int init_post_opt_local_allocator(
     const std::vector<mount_entry> &mount_entries) {
   bool invalid_path = false;
   for (auto &entry : mount_entries) {
-    if (!is_valid_image(entry.image_path)) {
+    if (!is_file(entry.image_path)) {
       invalid_path = true;
       slurm_error("Image does not exist: %s", entry.image_path.c_str());
     }

@@ -59,16 +59,17 @@ parse_arg(const std::string &arg, std::optional<std::string> uenv_repo_path) {
       mount_entries.emplace_back(mount_entry{image_path, mount_point});
     } else if (std::regex_match(entry, match, repo_pattern)) {
       uenv_desc desc = parse_uenv_string(entry);
-      if(!uenv_repo_path) {
-        // TODO: print a warning
-        continue;
+      if (!uenv_repo_path) {
+        return util::unexpected("Attempting to open from uenv repository. But "
+                                "either $" UENV_REPO_PATH_VARNAME
+                                " or $SCRATCH is not set.");
       }
-      auto res = find_repo_image(desc, uenv_repo_path.value());
-      std::string mount_point = get_mount_point(match[4]);
-      if (!res.has_value()) {
-        return util::unexpected(res.error());
+      auto image_path = find_repo_image(desc, uenv_repo_path.value());
+      if (!image_path.has_value()) {
+        return util::unexpected(image_path.error());
       }
-      mount_entries.emplace_back(mount_entry{res.value(), mount_point});
+      mount_entries.emplace_back(
+          mount_entry{image_path.value(), get_mount_point(match[4])});
     } else {
       // no match found
       return util::unexpected(

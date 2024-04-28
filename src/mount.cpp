@@ -4,10 +4,8 @@
 #include <cstdlib>
 #include <err.h>
 #include <fcntl.h>
-#include <iostream>
 #include <libmount/libmount.h>
 #include <linux/loop.h>
-#include <optional>
 #include <sched.h>
 #include <slurm/slurm_errno.h>
 #include <sstream>
@@ -35,22 +33,6 @@ util::expected<std::string, std::string> get_realpath(const std::string &path) {
     char *err = strerror(errno);
     return util::unexpected(err);
   }
-}
-
-bool is_valid_image(const std::string &squashfs_file) {
-  struct stat mnt_stat;
-  // Check that the input squashfs file exists.
-  int sqsh_status = stat(squashfs_file.c_str(), &mnt_stat);
-  if (sqsh_status) {
-    slurm_spank_log("Invalid squashfs image \"%s\"", squashfs_file.c_str());
-    return false;
-  }
-  if (!S_ISREG(mnt_stat.st_mode)) {
-    slurm_spank_log("Invalid squashfs image \"%s\" is not a file",
-                    squashfs_file.c_str());
-    return false;
-  }
-  return true;
 }
 
 bool is_valid_mountpoint(const std::string &mount_point) {
@@ -86,7 +68,7 @@ int do_mount(spank_t spank, const std::vector<mount_entry> &mount_entries) {
     std::string mount_point = entry.mount_point;
     std::string squashfs_file = entry.image_path;
 
-    if (!is_valid_image(squashfs_file) || !is_valid_mountpoint(mount_point)) {
+    if (!is_file(squashfs_file) || !is_valid_mountpoint(mount_point)) {
       return -ESPANK_ERROR;
     }
 
