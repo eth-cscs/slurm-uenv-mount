@@ -4,6 +4,8 @@ FROM ${DOCKER_CONTAINER}
 RUN zypper install -y\
     fuse3-devel\
     git \
+    sqlite3 \
+    sqlite3-devel \
     libopenssl-devel\
     util-linux\
     util-linux-systemd\
