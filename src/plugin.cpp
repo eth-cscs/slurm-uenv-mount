@@ -116,7 +116,7 @@ std::optional<std::string> get_uenv_repo_path(spank_t sp) {
   }
 
   auto scratch = getenv(sp, "SCRATCH");
-  if(!scratch) {
+  if (!scratch) {
     return std::nullopt;
   }
   return scratch.value() + "/.uenv-images";
@@ -177,8 +177,10 @@ int slurm_spank_init_post_opt(spank_t sp, int ac [[maybe_unused]],
   } else {
     // check if UENV_MOUNT_LIST is set in environment
     if (auto uenv_mount_list = get_uenv_env(sp)) {
-      // UENV_MOUNT_LIST is assumed to be fully processed, we don't query sqlite here
-      auto parsed_uenv_arg = parse_arg(*uenv_mount_list, /*uenv repo*/ std::nullopt);
+      // UENV_MOUNT_LIST is assumed to be fully processed, we don't query sqlite
+      // here
+      auto parsed_uenv_arg =
+          parse_arg(*uenv_mount_list, /*uenv repo*/ std::nullopt);
       if (!parsed_uenv_arg) {
         slurm_error("%s", parsed_uenv_arg.error().what());
         return -ESPANK_ERROR;
