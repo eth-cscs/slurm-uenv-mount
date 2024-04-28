@@ -1,3 +1,6 @@
 #pragma once
 
 #define DEFAULT_MOUNT_POINT "@default_mount_point@"
+#define UENV_UARCH "@uarch@"
+// the name of the env variable `UENV_REPO_PATH`
+#define UENV_REPO_PATH_VARNAME "@uenv_repo_path_varname@"

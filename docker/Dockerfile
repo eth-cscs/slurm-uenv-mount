@@ -61,7 +61,7 @@ RUN wget https://github.com/vasi/squashfuse/archive/refs/tags/0.1.105.tar.gz \
     && ./autogen.sh && ./configure --prefix=/usr/local && sudo make install
 
 RUN --mount=type=bind,source=./,target=/slurm-uenv-mount \
-    meson setup /slurm-uenv-mount uenv-build \
+    meson setup -Duarch=$(uname -m) /slurm-uenv-mount uenv-build \
     && meson compile -C uenv-build \
     && meson install -C uenv-build \
     && echo "required /usr/local/lib64/libslurm-uenv-mount.so" > /etc/slurm/plugstack.conf

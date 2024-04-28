@@ -1,9 +1,11 @@
 #include "datastore.hpp"
+#include "config.hpp"
+#include "sqlite/sqlite.hpp"
+#include "src/util/expected.hpp"
 #include "util/helper.hpp"
-#include "util/sqlite.hpp"
 #include <set>
+#include <sstream>
 #include <stdexcept>
-
 /*
  return dictionary{"name", "version", "tag", "sha" } from a uenv description
  string
@@ -40,20 +42,43 @@ uenv_desc parse_uenv_string(const std::string &str) {
   return res;
 }
 
-std::string find_repo_image(const uenv_desc &desc) {
-  std::string dbpath = "/scratch/index.db";
+uenv_desc to_desc(SQLiteStatement &stmt) {
+  uenv_desc desc;
+  desc.name = stmt.getColumn(stmt.getColumnIndex("name"));
+  desc.sha = stmt.getColumn(stmt.getColumnIndex("sha256"));
+  desc.tag = stmt.getColumn(stmt.getColumnIndex("tag"));
+  desc.version = stmt.getColumn(stmt.getColumnIndex("version"));
+  return desc;
+}
+
+struct cmp {
+  bool operator()(const uenv_desc &d1, const uenv_desc &d2) const {
+    return d1.sha < d2.sha;
+  }
+};
+
+util::expected<std::string, std::string>
+find_repo_image(const uenv_desc &desc, const std::string &repo_path) {
+  // TODO: also filter uarch
+  std::string dbpath = repo_path + "/index.db";
   SQLiteDB db(dbpath, sqlite_open::readonly);
 
+  // get all results
+  std::set<uenv_desc, cmp> shas;
   if (desc.sha) {
     if (desc.sha.value().size() < 64) {
-      SQLiteStatement query(db, "SELECT * FROM records WHERE id = " + desc.sha.value());
-      // query.bind(1, desc.sha.value());
+      SQLiteStatement query(db, "SELECT * FROM records WHERE id = " +
+                                    desc.sha.value());
     } else {
-      SQLiteStatement query(db, "SELECT * FROM records WHERE sha256 = " + desc.sha.value());
+      SQLiteStatement query(db, "SELECT * FROM records WHERE sha256 = " +
+                                    desc.sha.value());
     }
   } else {
     std::string query_str = "SELECT * FROM records WHERE ";
     std::vector<std::pair<std::string, std::string>> filter;
+    // only search for current uarch
+    filter.push_back(std::make_pair("uarch", UENV_UARCH));
+
     if (desc.name) {
       filter.push_back(std::make_pair("name", desc.name.value()));
     }
@@ -71,16 +96,19 @@ std::string find_repo_image(const uenv_desc &desc) {
     }
     SQLiteStatement query(db, query_str);
 
-    // get all results
-    std::set<std::string> shas;
-    while(query.execute()) {
-      int aIndex = query.getColumnIndex("sha256");
-      shas.insert(query.getColumn(aIndex));
+    while (query.execute()) {
+      shas.insert(to_desc(query));
     }
-    if(shas.size() > 1) {
-      throw std::runtime_error("nope");
+    if (shas.size() > 1) {
+      std::stringstream ss;
+      ss << "[error]  more than one uenv matches.\n";
+      for (auto &d : shas) {
+        ss << d.name.value() << "/" << d.version.value() << ":" << d.tag.value()
+           << "\t" << d.sha.value() << "\n";
+      }
+      return util::unexpected(ss.str());
     }
   }
 
-  return "TODO";
+  return repo_path + "/" + shas.begin()->sha.value() + "/store.squashfs";
 }

@@ -1,6 +1,6 @@
 #include "parse_args.hpp"
-#include "util/expected.hpp"
 #include "datastore.hpp"
+#include "util/expected.hpp"
 #include <algorithm>
 #include <regex>
 #include <set>
@@ -11,11 +11,18 @@
 
 // abs path
 #define LINUX_ABS_FPATH "/[^\\0,:]+"
+#define JFROG_IMAGE "[^\\0,:/]+"
 namespace impl {
 
 const std::regex default_pattern("(" LINUX_ABS_FPATH ")"
                                  "(:" LINUX_ABS_FPATH ")?",
                                  std::regex::ECMAScript);
+// match <image-name>/?<version>:?<tag>:?<abs-mount-path>
+const std::regex repo_pattern("(" JFROG_IMAGE ")"
+                              "(/[0-9.]+)?"
+                              "(:[a-zA-Z0-9]+)?"
+                              "(:" LINUX_ABS_FPATH ")?",
+                              std::regex::ECMAScript);
 
 std::vector<std::string> split(const std::string &s, char delim) {
   std::vector<std::string> elems;
@@ -29,7 +36,7 @@ std::vector<std::string> split(const std::string &s, char delim) {
 }
 
 util::expected<std::vector<mount_entry>, std::runtime_error>
-parse_arg(const std::string &arg) {
+parse_arg(const std::string &arg, const std::string& uenv_repo_path) {
   std::vector<std::string> arguments = split(arg, ',');
 
   if (arguments.empty()) {
@@ -48,13 +55,17 @@ parse_arg(const std::string &arg) {
         mount_point = DEFAULT_MOUNT_POINT;
       }
       mount_entries.emplace_back(mount_entry{image_path, mount_point});
-    } else if (false) {
+    } else if (std::regex_match(entry, match, repo_pattern)) {
       uenv_desc desc = parse_uenv_string(entry);
-      // TODO
+      return find_repo_image(desc, uenv_repo_path);
     } else {
       // no match found
-      return util::unexpected("Invalid syntax for --uenv, expected format is: "
-                              "\"<file>[:mount-point][,<file:mount-point>]*\"");
+      return util::unexpected(
+          "Invalid syntax for --uenv, expected format is: "
+          "\"<image>[:mount-point][,<image:mount-point>]*\""
+          "\n where <image> is either an absolute path or an image. Run `uenv "
+          "image ls` to see a list of available images.\n"
+          "mount-point must be an absolute path.");
     }
   }
 
@@ -82,9 +93,9 @@ parse_arg(const std::string &arg) {
     return util::unexpected("Duplicate mountpoints found.");
   }
   std::set<std::string> set_images;
-  std::for_each(mount_entries.begin(), mount_entries.end(), [&set_images](const auto &e) {
-    set_images.insert(e.image_path);
-  });
+  std::for_each(
+      mount_entries.begin(), mount_entries.end(),
+      [&set_images](const auto &e) { set_images.insert(e.image_path); });
   if (set_images.size() != mount_entries.size()) {
     return util::unexpected("Duplicate images found.");
   }

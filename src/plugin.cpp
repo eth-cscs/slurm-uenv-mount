@@ -4,11 +4,11 @@
 #include <string>
 #include <unistd.h>
 #include <vector>
-#include <SQLiteCpp/SQLiteCpp.h>
 
 #include "config.hpp"
 #include "mount.hpp"
 #include "parse_args.hpp"
+#include "src/config.hpp.in"
 
 extern "C" {
 #include <slurm/slurm_errno.h>
@@ -107,6 +107,16 @@ std::optional<std::string> get_uenv_env(spank_t sp) {
   return getenv(sp, UENV_MOUNT_LIST);
 }
 
+std::string get_uenv_repo_path(spank_t sp) {
+  auto path = getenv(sp, UENV_REPO_PATH_VARNAME);
+  if (path) {
+    return path.value();
+  }
+
+  auto scratch = getenv(sp, "SCRATCH");
+  return scratch.value() + "/.uenv-images";
+}
+
 int slurm_spank_init(spank_t sp, int ac, char **av) {
 
   if (auto status = spank_option_register(sp, &uenv_arg)) {
@@ -146,10 +156,11 @@ int init_post_opt_local_allocator(
 
 int slurm_spank_init_post_opt(spank_t sp, int ac, char **av) {
 
+  std::string uenv_repo_path = get_uenv_repo_path(sp);
   std::vector<mount_entry> mount_entries;
   if (args.uenv_flag_present) {
     // parse --uenv argument
-    auto parsed_uenv_arg = parse_arg(args.uenv_arg);
+    auto parsed_uenv_arg = parse_arg(args.uenv_arg, uenv_repo_path);
     if (!parsed_uenv_arg) {
       slurm_error("%s", parsed_uenv_arg.error().what());
       return -ESPANK_ERROR;
@@ -158,7 +169,7 @@ int slurm_spank_init_post_opt(spank_t sp, int ac, char **av) {
   } else {
     // check if UENV_MOUNT_LIST is set in environment
     if (auto uenv_mount_list = get_uenv_env(sp)) {
-      auto parsed_uenv_arg = parse_arg(*uenv_mount_list);
+      auto parsed_uenv_arg = parse_arg(*uenv_mount_list, uenv_repo_path);
       if (!parsed_uenv_arg) {
         slurm_error("%s", parsed_uenv_arg.error().what());
         return -ESPANK_ERROR;
