@@ -1,6 +1,7 @@
 #include "mount.hpp"
 #include "parse_args.hpp"
 #include "util/expected.hpp"
+#include "util/helper.hpp"
 #include <cstdlib>
 #include <err.h>
 #include <fcntl.h>

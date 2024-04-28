@@ -8,6 +8,7 @@
 #include "config.hpp"
 #include "mount.hpp"
 #include "parse_args.hpp"
+#include "util/helper.hpp"
 
 extern "C" {
 #include <slurm/slurm_errno.h>
@@ -106,7 +107,7 @@ std::optional<std::string> get_uenv_env(spank_t sp) {
   return getenv(sp, UENV_MOUNT_LIST);
 }
 
-/// return uenv_repo_path, either from UENV_REPO_PATH or $SCRATCH/.uenv-images
+/// return uenv_repo_path, default is $SCRATCH/.uenv-images or $UENV_REPO_PATH
 /// it doesn't check if paths exist
 std::optional<std::string> get_uenv_repo_path(spank_t sp) {
   auto path = getenv(sp, UENV_REPO_PATH_VARNAME);
