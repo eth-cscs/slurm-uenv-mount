@@ -36,28 +36,35 @@ std::vector<std::string> split(const std::string &s, char delim) {
 }
 
 util::expected<std::vector<mount_entry>, std::runtime_error>
-parse_arg(const std::string &arg, const std::string& uenv_repo_path) {
+parse_arg(const std::string &arg, const std::string &uenv_repo_path) {
   std::vector<std::string> arguments = split(arg, ',');
 
   if (arguments.empty()) {
     return util::unexpected("No mountpoints given.");
   }
 
+  auto get_mount_point = [](std::ssub_match sub_match) -> std::string {
+    if (sub_match.matched) {
+      return std::string(sub_match).erase(0, 1);
+    }
+    return std::string{DEFAULT_MOUNT_POINT};
+  };
+
   std::vector<mount_entry> mount_entries;
   for (auto &entry : arguments) {
     std::smatch match;
     if (std::regex_match(entry, match, default_pattern)) {
       std::string image_path = match[1];
-      std::string mount_point;
-      if (!match[2].str().empty()) {
-        mount_point = std::string(match[2]).erase(0, 1);
-      } else {
-        mount_point = DEFAULT_MOUNT_POINT;
-      }
+      std::string mount_point = get_mount_point(match[2]);
       mount_entries.emplace_back(mount_entry{image_path, mount_point});
     } else if (std::regex_match(entry, match, repo_pattern)) {
       uenv_desc desc = parse_uenv_string(entry);
-      return find_repo_image(desc, uenv_repo_path);
+      auto res = find_repo_image(desc, uenv_repo_path);
+      std::string mount_point = get_mount_point(match[4]);
+      if (!res.has_value()) {
+        return util::unexpected(res.error());
+      }
+      mount_entries.emplace_back(mount_entry{res.value(), mount_point});
     } else {
       // no match found
       return util::unexpected(

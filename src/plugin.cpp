@@ -8,7 +8,6 @@
 #include "config.hpp"
 #include "mount.hpp"
 #include "parse_args.hpp"
-#include "src/config.hpp.in"
 
 extern "C" {
 #include <slurm/slurm_errno.h>
@@ -117,7 +116,8 @@ std::string get_uenv_repo_path(spank_t sp) {
   return scratch.value() + "/.uenv-images";
 }
 
-int slurm_spank_init(spank_t sp, int ac, char **av) {
+int slurm_spank_init(spank_t sp, int ac [[maybe_unused]],
+                     char **av [[maybe_unused]]) {
 
   if (auto status = spank_option_register(sp, &uenv_arg)) {
     return status;
@@ -134,7 +134,8 @@ int init_post_opt_remote(spank_t sp,
 
 /// check if image/mountpoint are valid
 int init_post_opt_local_allocator(
-    spank_t sp, const std::vector<mount_entry> &mount_entries) {
+    spank_t sp [[maybe_unused]],
+    const std::vector<mount_entry> &mount_entries) {
   bool invalid_path = false;
   for (auto &entry : mount_entries) {
     if (!is_valid_image(entry.image_path)) {
@@ -154,7 +155,8 @@ int init_post_opt_local_allocator(
   return ESPANK_SUCCESS;
 }
 
-int slurm_spank_init_post_opt(spank_t sp, int ac, char **av) {
+int slurm_spank_init_post_opt(spank_t sp, int ac [[maybe_unused]],
+                              char **av [[maybe_unused]]) {
 
   std::string uenv_repo_path = get_uenv_repo_path(sp);
   std::vector<mount_entry> mount_entries;

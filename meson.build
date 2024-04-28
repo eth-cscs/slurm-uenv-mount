@@ -25,5 +25,5 @@ shared_module('slurm-uenv-mount',
                         'src/sqlite/sqlite.cpp',
                         'src/util/helper.cpp'],
               dependencies: [libmount_dep, sqlite3_dep],
-              cpp_args: ['-Wall', '-Wpedantic'],
+              cpp_args: ['-Wall', '-Wpedantic', '-Wextra'],
               install: true)
