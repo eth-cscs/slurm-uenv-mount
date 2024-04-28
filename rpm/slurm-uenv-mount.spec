@@ -23,7 +23,7 @@ A SLURM spank plugin to mount squashfs images.
 %ifarch x86_64
 %meson -Darch=x86_64
 %elifarch aarch64
-%meson -Darch=aarch64
+%meson -Darch=gh200
 %endif
 %meson_build
 

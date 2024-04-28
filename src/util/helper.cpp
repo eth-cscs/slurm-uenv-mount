@@ -10,24 +10,36 @@ extern "C" {
 #include <slurm/spank.h>
 }
 
-std::vector<std::string> split(const std::string &s, char delim, int maxsplit) {
-  if (maxsplit == 0) {
-    return {s};
-  }
-
+std::vector<std::string> split(const std::string &s, char delim) {
   std::vector<std::string> elems;
   std::stringstream ss(s);
   std::string item;
   while (std::getline(ss, item, delim)) {
     if (!item.empty())
       elems.push_back(item);
-    if (static_cast<int>(elems.size()) == maxsplit) {
-      elems.push_back(ss.str());
-      break;
-    }
   }
   return elems;
 }
+
+// std::vector<std::string> split(const std::string &s, char delim, int maxsplit) {
+//   if (maxsplit == 0) {
+//     return {s};
+//   }
+
+//   std::vector<std::string> elems;
+//   std::stringstream ss(s);
+//   std::string item;
+//   while (std::getline(ss, item, delim)) {
+//     if (!item.empty())
+//       elems.push_back(item);
+//     if (static_cast<int>(elems.size()) == maxsplit) {
+//       elems.push_back(ss.str());
+//       slurm_spank_log("maxsplit, appending %s", elems.back().c_str());
+//       break;
+//     }
+//   }
+//   return elems;
+// }
 
 bool is_full_sha256(const std::string &str) {
   std::regex pattern("^[a-fA-F0-9]{64}$");

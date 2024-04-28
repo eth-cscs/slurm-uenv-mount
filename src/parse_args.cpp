@@ -1,6 +1,7 @@
 #include "parse_args.hpp"
-#include "datastore.hpp"
+#include "sqlite/sqlite.hpp"
 #include "util/expected.hpp"
+#include "util/helper.hpp"
 #include <algorithm>
 #include <regex>
 #include <set>
@@ -33,6 +34,127 @@ std::vector<std::string> split(const std::string &s, char delim) {
       elems.push_back(item);
   }
   return elems;
+}
+
+/*
+ return dictionary{"name", "version", "tag", "sha" } from a uenv description
+ string
+
+ prgenv_gnu              ->("prgenv_gnu", None, None, None)
+ prgenv_gnu/23.11        ->("prgenv_gnu", "23.11", None, None)
+ prgenv_gnu/23.11:latest ->("prgenv_gnu", "23.11", "latest", None)
+ prgenv_gnu:v2           ->("prgenv_gnu", None, "v2", None)
+ 3313739553fe6553        ->(None, None, None, "3313739553fe6553")
+ */
+uenv_desc parse_uenv_string(const std::string &entry) {
+  uenv_desc res;
+
+  if (is_sha(entry)) {
+    res.sha = entry;
+    return res;
+  }
+
+  std::smatch match;
+  std::regex_match(entry, match, repo_pattern);
+
+  auto name = match[1];
+  auto version = match[2];
+  auto tag = match[3];
+
+  if (name.matched) {
+    res.name = name.str();
+  }
+
+  if (version.matched) {
+    res.version = std::string(version).erase(0, 1);
+  }
+
+  if (tag.matched) {
+    res.tag = std::string(tag).erase(0, 1);
+  }
+
+  return res;
+}
+
+uenv_desc to_desc(SQLiteStatement &stmt) {
+  uenv_desc desc;
+  desc.name = stmt.getColumn(stmt.getColumnIndex("name"));
+  desc.sha = stmt.getColumn(stmt.getColumnIndex("sha256"));
+  desc.tag = stmt.getColumn(stmt.getColumnIndex("tag"));
+  desc.version = stmt.getColumn(stmt.getColumnIndex("version"));
+  return desc;
+}
+
+struct cmp {
+  bool operator()(const uenv_desc &d1, const uenv_desc &d2) const {
+    return d1.sha < d2.sha;
+  }
+};
+
+util::expected<std::string, std::string>
+find_repo_image(const uenv_desc &desc, const std::string &repo_path) {
+  std::string dbpath = repo_path + "/index.db";
+  // check if dbpath exists.
+  if (!is_file(dbpath)) {
+    return util::unexpected("Can't open uenv repo. " + dbpath +
+                            " is not a file.");
+  }
+  SQLiteDB db(dbpath, sqlite_open::readonly);
+
+  // get all results
+  std::set<uenv_desc, cmp> shas;
+  if (desc.sha) {
+    if (desc.sha.value().size() < 64) {
+      SQLiteStatement query(db, "SELECT * FROM records WHERE id = " +
+                                    desc.sha.value());
+    } else {
+      SQLiteStatement query(db, "SELECT * FROM records WHERE sha256 = " +
+                                    desc.sha.value());
+    }
+  } else {
+    std::string query_str = "SELECT * FROM records WHERE ";
+    std::vector<std::pair<std::string, std::string>> filter;
+    // only search for current uarch
+    filter.push_back(std::make_pair("uarch", UENV_UARCH));
+
+    if (desc.name) {
+      filter.push_back(std::make_pair("name", desc.name.value()));
+    }
+    if (desc.version) {
+      filter.push_back(std::make_pair("version", desc.version.value()));
+    }
+    if (desc.tag) {
+      filter.push_back(std::make_pair("tag", desc.tag.value()));
+    }
+    for (size_t i = 0; i < filter.size(); ++i) {
+      if (i > 0) {
+        query_str += " AND ";
+      }
+      query_str += filter[i].first + " = " + "\'" + filter[i].second + "\'";
+    }
+
+    slurm_spank_log("DEBUG: %s", query_str.c_str());
+
+    SQLiteStatement query(db, query_str);
+
+    while (query.execute()) {
+      shas.insert(to_desc(query));
+    }
+    if (shas.size() > 1) {
+      std::stringstream ss;
+      ss << "more than one uenv matches.\n";
+      for (auto &d : shas) {
+        ss << d.name.value() << "/" << d.version.value() << ":" << d.tag.value()
+           << "\t" << d.sha.value() << "\n";
+      }
+      return util::unexpected(ss.str());
+    }
+    if(shas.empty()) {
+      return util::unexpected("no images found");
+    }
+  }
+
+  return repo_path + "/images/" + shas.begin()->sha.value() + "/store.squashfs";
 }
 
 util::expected<std::vector<mount_entry>, std::runtime_error>

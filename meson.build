@@ -20,7 +20,6 @@ sqlite3_dep = dependency('sqlite3')
 shared_module('slurm-uenv-mount',
               sources: ['src/plugin.cpp',
                         'src/mount.cpp',
-                        'src/datastore.cpp',
                         'src/parse_args.cpp',
                         'src/sqlite/sqlite.cpp',
                         'src/util/helper.cpp'],
