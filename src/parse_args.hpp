@@ -18,7 +18,9 @@ struct mount_entry {
 /// parse list of `:` separated tuples, enforce absolute paths, sort output by
 /// mountpoint
 util::expected<std::vector<mount_entry>, std::runtime_error>
-parse_arg(const std::string &arg, std::optional<std::string> uenv_repo_path);
+parse_arg(const std::string &arg,
+          std::optional<std::string> uenv_repo_path = std::nullopt,
+          std::optional<std::string> uenv_arch = std::nullopt);
 
 struct uenv_desc {
   using entry_t = std::optional<std::string>;

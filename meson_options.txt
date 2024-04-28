@@ -1,3 +1,2 @@
 option('default_mount_point', type: 'string', value: '/user-environment')
-option('uarch', type: 'string')
 option('uenv_repo_path_varname', type: 'string', value: 'UENV_REPO_PATH')

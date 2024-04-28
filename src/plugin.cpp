@@ -54,8 +54,8 @@ int slurm_spank_init_post_opt(spank_t sp, int ac, char **av) {
 //
 namespace impl {
 struct arg_pack {
-  std::string uenv_arg;
-  bool uenv_flag_present = false;
+  std::optional<std::string> uenv_arg;
+  std::optional<std::string> uenv_arch_arg;
 };
 
 static arg_pack args{};
@@ -97,8 +97,21 @@ static spank_option uenv_arg{
     0, // plugin specific value to pass to the callback (unnused)
     [](int val, const char *optarg, int remote) -> int {
       slurm_verbose("uenv: val:%d optarg:%s remote:%d", val, optarg, remote);
-      args.uenv_flag_present = true;
       args.uenv_arg = optarg;
+      return ESPANK_SUCCESS;
+    }};
+
+static spank_option uenv_arch{
+    (char *)"uenv-uarch",
+    (char *)"<uarch>",
+    (char *)"The micro-architecture (uarch) to target. May be required to "
+            "disambiguate uenv on systems with more than one node uarch. "
+            "Available options are zen2, zen3, a100, mi200, gh200.",
+    1, // requires an argument
+    0, // plugin specific value to pass to the callback (unnused)
+    [](int val, const char *optarg, int remote) -> int {
+      slurm_verbose("uenv: val:%d optarg:%s remote:%d", val, optarg, remote);
+      args.uenv_arch_arg = optarg;
       return ESPANK_SUCCESS;
     }};
 
@@ -125,8 +138,10 @@ std::optional<std::string> get_uenv_repo_path(spank_t sp) {
 int slurm_spank_init(spank_t sp, int ac [[maybe_unused]],
                      char **av [[maybe_unused]]) {
 
-  if (auto status = spank_option_register(sp, &uenv_arg)) {
-    return status;
+  for (auto arg : {&uenv_arg, &uenv_arch}) {
+    if (auto status = spank_option_register(sp, arg)) {
+      return status;
+    }
   }
 
   return ESPANK_SUCCESS;
@@ -166,9 +181,9 @@ int slurm_spank_init_post_opt(spank_t sp, int ac [[maybe_unused]],
 
   auto uenv_repo_path = get_uenv_repo_path(sp);
   std::vector<mount_entry> mount_entries;
-  if (args.uenv_flag_present) {
+  if (args.uenv_arg) {
     // parse --uenv argument, jfrog/oras is optional
-    auto parsed_uenv_arg = parse_arg(args.uenv_arg, uenv_repo_path);
+    auto parsed_uenv_arg = parse_arg(args.uenv_arg.value(), uenv_repo_path, args.uenv_arch_arg);
     if (!parsed_uenv_arg) {
       slurm_error("%s", parsed_uenv_arg.error().what());
       return -ESPANK_ERROR;
