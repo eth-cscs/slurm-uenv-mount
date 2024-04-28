@@ -183,7 +183,8 @@ int slurm_spank_init_post_opt(spank_t sp, int ac [[maybe_unused]],
   std::vector<mount_entry> mount_entries;
   if (args.uenv_arg) {
     // parse --uenv argument, jfrog/oras is optional
-    auto parsed_uenv_arg = parse_arg(args.uenv_arg.value(), uenv_repo_path, args.uenv_arch_arg);
+    auto parsed_uenv_arg =
+        parse_arg(args.uenv_arg.value(), uenv_repo_path, args.uenv_arch_arg);
     if (!parsed_uenv_arg) {
       slurm_error("%s", parsed_uenv_arg.error().what());
       return -ESPANK_ERROR;

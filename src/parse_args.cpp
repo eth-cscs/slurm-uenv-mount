@@ -93,7 +93,8 @@ struct cmp {
 };
 
 util::expected<std::string, std::string>
-find_repo_image(const uenv_desc &desc, const std::string &repo_path, std::optional<std::string> uenv_arch) {
+find_repo_image(const uenv_desc &desc, const std::string &repo_path,
+                std::optional<std::string> uenv_arch) {
   std::string dbpath = repo_path + "/index.db";
   // check if dbpath exists.
   if (!is_file(dbpath)) {
@@ -115,7 +116,7 @@ find_repo_image(const uenv_desc &desc, const std::string &repo_path, std::option
   } else {
     std::string query_str = "SELECT * FROM records WHERE ";
     std::vector<std::pair<std::string, std::string>> filter;
-    if(uenv_arch.has_value()) {
+    if (uenv_arch.has_value()) {
       filter.push_back(std::make_pair("uarch", uenv_arch.value()));
     }
     if (desc.name) {
@@ -150,8 +151,9 @@ find_repo_image(const uenv_desc &desc, const std::string &repo_path, std::option
       }
       return util::unexpected(ss.str());
     }
-    if(shas.empty()) {
-      return util::unexpected("No images found. Run `uenv image ls` to list available images.");
+    if (shas.empty()) {
+      return util::unexpected(
+          "No images found. Run `uenv image ls` to list available images.");
     }
   }
 
@@ -159,7 +161,8 @@ find_repo_image(const uenv_desc &desc, const std::string &repo_path, std::option
 }
 
 util::expected<std::vector<mount_entry>, std::runtime_error>
-parse_arg(const std::string &arg, std::optional<std::string> uenv_repo_path, std::optional<std::string> uenv_arch) {
+parse_arg(const std::string &arg, std::optional<std::string> uenv_repo_path,
+          std::optional<std::string> uenv_arch) {
   std::vector<std::string> arguments = split(arg, ',');
 
   if (arguments.empty()) {
@@ -187,7 +190,8 @@ parse_arg(const std::string &arg, std::optional<std::string> uenv_repo_path, std
                                 "either $" UENV_REPO_PATH_VARNAME
                                 " or $SCRATCH is not set.");
       }
-      auto image_path = find_repo_image(desc, uenv_repo_path.value(), uenv_arch);
+      auto image_path =
+          find_repo_image(desc, uenv_repo_path.value(), uenv_arch);
       if (!image_path.has_value()) {
         return util::unexpected(image_path.error());
       }

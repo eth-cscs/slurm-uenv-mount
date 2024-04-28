@@ -34,7 +34,7 @@ public:
   SQLiteStatement operator=(const SQLiteStatement &) = delete;
   std::string getColumnType(int i);
   SQLiteColumn getColumn(int i);
-  int getColumnIndex(const std::string& name);
+  int getColumnIndex(const std::string &name);
   bool execute();
 
   virtual ~SQLiteStatement();
@@ -55,7 +55,7 @@ public:
   SQLiteColumn(SQLiteStatement &statement, int index);
   std::string getColumnName() const;
   operator int() const;
-  operator std::string () const;
+  operator std::string() const;
 
 private:
   SQLiteStatement &statement;
