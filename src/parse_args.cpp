@@ -115,30 +115,38 @@ find_repo_image(const uenv_desc &desc, const std::string &repo_path,
     }
   } else {
     std::string query_str = "SELECT * FROM records WHERE ";
-    std::vector<std::pair<std::string, std::string>> filter;
-    if (uenv_arch.has_value()) {
-      filter.push_back(std::make_pair("uarch", uenv_arch.value()));
+    std::vector<std::string> filter;
+    if (uenv_arch) {
+      filter.push_back("uarch");
     }
     if (desc.name) {
-      filter.push_back(std::make_pair("name", desc.name.value()));
+      filter.push_back("name");
     }
     if (desc.version) {
-      filter.push_back(std::make_pair("version", desc.version.value()));
+      filter.push_back("version");
     }
     if (desc.tag) {
-      filter.push_back(std::make_pair("tag", desc.tag.value()));
+      filter.push_back("tag");
     }
     for (size_t i = 0; i < filter.size(); ++i) {
       if (i > 0) {
         query_str += " AND ";
       }
-      query_str += filter[i].first + " = " + "\'" + filter[i].second + "\'";
+      query_str += filter[i] + " = " + ":" + filter[i];
     }
-
-    slurm_spank_log("DEBUG: %s", query_str.c_str());
-
     SQLiteStatement query(db, query_str);
-
+    if (uenv_arch.has_value()) {
+      query.bind(":uarch", uenv_arch.value());
+    }
+    if (desc.name) {
+      query.bind(":name", desc.name.value());
+    }
+    if (desc.version) {
+      query.bind(":version", desc.version.value());
+    }
+    if (desc.tag) {
+      query.bind(":tag", desc.tag.value());
+    }
     while (query.execute()) {
       shas.insert(to_desc(query));
     }
