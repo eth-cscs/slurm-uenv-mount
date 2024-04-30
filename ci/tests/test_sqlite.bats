@@ -48,7 +48,7 @@ function teardown() {
 
 @test "mount jfrog image by sha256" {
     export UENV_REPO_PATH=${SQFSDIR}
-    run_srun --uenv= 1736b4bb5ad9b3c5cae8878c71782a8bf2f2f739dbce8e039b629de418cb4dab true
+    run_srun --uenv=1736b4bb5ad9b3c5cae8878c71782a8bf2f2f739dbce8e039b629de418cb4dab true
 }
 
 @test "attempt to mount ambiguous prgenv-gnu" {
