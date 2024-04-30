@@ -11,7 +11,7 @@ function setup() {
 
     for hash in ${img_hashes[@]}
     do
-        mkdir -p ${SQFSDIR}/$hash
+        mkdir -p ${SQFSDIR}/images/$hash
     done
 
     dd=$(mktemp -d)
@@ -25,7 +25,7 @@ function setup() {
 
     for hash in ${img_hashes[@]}
     do
-        cp ${SQFSDIR}/store.squashfs  ${SQFSDIR}/${hash}/
+        cp ${SQFSDIR}/store.squashfs  ${SQFSDIR}/images/${hash}/
     done
 }
 
@@ -34,17 +34,29 @@ function teardown() {
 }
 
 
-@test "mount_stack_profiler_and_tools" {
+@test "mount prgenv-gnu" {
     export UENV_REPO_PATH=${SQFSDIR}
     run_srun --uenv=prgenv-gnu/24.2 true
     run_srun --uenv=prgenv-gnu:latest true
     run_srun --uenv=prgenv-gnu/24.2:latest true
 }
 
-# @test "duplicate_flag" {
-#     # the second invocaton is ignored, resp. overwritten
-#     run_srun --uenv=${SQFSDIR}/binaries.sqfs --uenv=${SQFSDIR}/binaries.sqfs true
-# }
+@test "mount jfrog image by id" {
+    export UENV_REPO_PATH=${SQFSDIR}
+    run_srun --uenv=1736b4bb5ad9b3c5 true
+}
+
+@test "mount jfrog image by sha256" {
+    export UENV_REPO_PATH=${SQFSDIR}
+    run_srun --uenv= 1736b4bb5ad9b3c5cae8878c71782a8bf2f2f739dbce8e039b629de418cb4dab true
+}
+
+@test "attempt to mount ambiguous prgenv-gnu" {
+    export UENV_REPO_PATH=${SQFSDIR}
+    run_srun_unchecked --uenv=prgenv-gnu true
+    assert_output --partial 'More than one uenv matches.'
+}
+
 
 # @test "plain" {
 #     # nothing is done if no --uenv is present and UENV_MOUNT_LIST is empty
