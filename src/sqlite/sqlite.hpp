@@ -35,6 +35,7 @@ public:
   std::string getColumnType(int i);
   SQLiteColumn getColumn(int i);
   int getColumnIndex(const std::string &name);
+  void bind(const std::string& name, const std::string& value);
   bool execute();
 
   virtual ~SQLiteStatement();

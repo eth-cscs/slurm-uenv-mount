@@ -66,6 +66,13 @@ int SQLiteStatement::getColumnIndex(const std::string &name) {
   return -1;
 }
 
+void SQLiteStatement::bind(const std::string& name, const std::string& value) {
+  int i = sqlite3_bind_parameter_index(this->stmt, name.c_str());
+  if(sqlite3_bind_text(this->stmt, i, value.c_str(), -1, SQLITE_STATIC) != SQLITE_OK) {
+    throw SQLiteError(std::string("Failed to bind parameter: ") + sqlite3_errmsg(this->db.get()));
+  }
+}
+
 void SQLiteStatement::checkIndex(int i) const {
   if (i >= this->column_count) {
     throw SQLiteError("Column out of range");
