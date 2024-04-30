@@ -107,11 +107,17 @@ find_repo_image(const uenv_desc &desc, const std::string &repo_path,
   std::set<uenv_desc, cmp> shas;
   if (desc.sha) {
     if (desc.sha.value().size() < 64) {
-      SQLiteStatement query(db, "SELECT * FROM records WHERE id = " +
-                                    desc.sha.value());
+      SQLiteStatement query(db, "SELECT * FROM records WHERE id = :id");
+      query.bind(":id", desc.sha.value());
+      while (query.execute()) {
+        shas.insert(to_desc(query));
+      }
     } else {
-      SQLiteStatement query(db, "SELECT * FROM records WHERE sha256 = " +
-                                    desc.sha.value());
+      SQLiteStatement query(db, "SELECT * FROM records WHERE sha256 = :sha");
+      query.bind(":sha", desc.sha.value());
+      while (query.execute()) {
+        shas.insert(to_desc(query));
+      }
     }
   } else {
     std::string query_str = "SELECT * FROM records WHERE ";
@@ -150,21 +156,20 @@ find_repo_image(const uenv_desc &desc, const std::string &repo_path,
     while (query.execute()) {
       shas.insert(to_desc(query));
     }
-    if (shas.size() > 1) {
-      std::stringstream ss;
-      ss << "more than one uenv matches.\n";
-      for (auto &d : shas) {
-        ss << d.name.value() << "/" << d.version.value() << ":" << d.tag.value()
-           << "\t" << d.sha.value() << "\n";
-      }
-      return util::unexpected(ss.str());
-    }
-    if (shas.empty()) {
-      return util::unexpected(
-          "No images found. Run `uenv image ls` to list available images.");
-    }
   }
-
+  if (shas.size() > 1) {
+    std::stringstream ss;
+    ss << "More than one uenv matches.\n";
+    for (auto &d : shas) {
+      ss << d.name.value() << "/" << d.version.value() << ":" << d.tag.value()
+         << "\t" << d.sha.value() << "\n";
+    }
+    return util::unexpected(ss.str());
+  }
+  if (shas.empty()) {
+    return util::unexpected(
+        "No images found. Run `uenv image ls` to list available images.");
+  }
   return repo_path + "/images/" + shas.begin()->sha.value() + "/store.squashfs";
 }
 
