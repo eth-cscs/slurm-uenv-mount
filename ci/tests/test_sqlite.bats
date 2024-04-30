@@ -5,7 +5,7 @@ function setup() {
     SQFSDIR=$(mktemp -d)
     export SQFSDIR
     rm -f index.db
-    sqlite3 ${SQFSDIR}/index.db < index.db.txt
+    sqlite3 ${SQFSDIR}/index.db < ci/tests/index.db.txt
 
     img_hashes=(1736b4bb5ad9b3c5cae8878c71782a8bf2f2f739dbce8e039b629de418cb4dab 3313739553fe6553f789a35325eb6954a37a7b85cdeab943d0878a05edaac998 3e8f96370a4685a7413d344d98f69889c0ba6bb1d6c2d3d19ce01b6079c58c68)
 
