@@ -1,0 +1,53 @@
+PRAGMA foreign_keys=OFF;
+BEGIN TRANSACTION;
+CREATE TABLE images (
+    sha256 TEXT PRIMARY KEY CHECK(length(sha256)==64),
+    id TEXT UNIQUE CHECK(length(id)==16),
+    date TEXT NOT NULL,
+    size INTEGER NOT NULL,
+    uarch TEXT NOT NULL,
+    system TEXT NOT NULL
+);
+INSERT INTO images VALUES('3e8f96370a4685a7413d344d98f69889c0ba6bb1d6c2d3d19ce01b6079c58c68','3e8f96370a4685a7','2024-03-11 17:08:35.976000+00:00',8881353294,'x86_64','santis');
+INSERT INTO images VALUES('1736b4bb5ad9b3c5cae8878c71782a8bf2f2f739dbce8e039b629de418cb4dab','1736b4bb5ad9b3c5','2024-02-19 06:33:57.442000+00:00',3987993166,'x86_64','santis');
+CREATE TABLE uenv (
+    version_id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL,
+    version TEXT NOT NULL,
+    UNIQUE (name, version)
+);
+INSERT INTO uenv VALUES(1,'icon-wcp','v1');
+INSERT INTO uenv VALUES(2,'prgenv-gnu','24.2');
+CREATE TABLE tags (
+    version_id INTEGER,
+    tag TEXT NOT NULL,
+    sha256 TEXT NOT NULL,
+    PRIMARY KEY (version_id, tag),
+    FOREIGN KEY (version_id)
+        REFERENCES uenv (version_id)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE,
+    FOREIGN KEY (sha256)
+        REFERENCES images (sha256)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE
+);
+INSERT INTO tags VALUES(1,'latest','3e8f96370a4685a7413d344d98f69889c0ba6bb1d6c2d3d19ce01b6079c58c68');
+INSERT INTO tags VALUES(1,'v3','3e8f96370a4685a7413d344d98f69889c0ba6bb1d6c2d3d19ce01b6079c58c68');
+INSERT INTO tags VALUES(2,'latest','1736b4bb5ad9b3c5cae8878c71782a8bf2f2f739dbce8e039b629de418cb4dab');
+INSERT INTO tags VALUES(2,'v2','1736b4bb5ad9b3c5cae8878c71782a8bf2f2f739dbce8e039b629de418cb4dab');
+CREATE VIEW records AS
+SELECT
+    images.system  AS system,
+    images.uarch   AS uarch,
+    uenv.name      AS name,
+    uenv.version   AS version,
+    tags.tag       AS tag,
+    images.date    AS date,
+    images.size    AS size,
+    tags.sha256    AS sha256,
+    images.id      AS id
+FROM tags
+    INNER JOIN uenv   ON uenv.version_id = tags.version_id
+    INNER JOIN images ON images.sha256   = tags.sha256;
+COMMIT;
