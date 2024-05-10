@@ -20,9 +20,10 @@ const std::regex default_pattern("(" LINUX_ABS_FPATH ")"
                                  "(:" LINUX_ABS_FPATH ")?",
                                  std::regex::ECMAScript);
 // match <image-name>/?<version>:?<tag>:?<abs-mount-path>
+// deviates from the official scheme: https://github.com/opencontainers/distribution-spec/blob/main/spec.md#pulling-manifests
 const std::regex repo_pattern("(" JFROG_IMAGE ")"
-                              "(/[0-9.]+)?"
-                              "(:[a-zA-Z0-9]+)?"
+                              "(/[a-zA-Z0-9._-]+)?"
+                              "(:[a-zA-Z0-9._-]+)?"
                               "(:" LINUX_ABS_FPATH ")?",
                               std::regex::ECMAScript);
 
