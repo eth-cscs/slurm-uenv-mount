@@ -28,7 +28,9 @@ RUN zypper install -y\
     util-linux-systemd\
     psmisc\
     psutils\
-    strace
+    strace \
+    sqlite3 \
+    sqlite3-devel
 
 # install python
 RUN curl -O https://www.python.org/ftp/python/3.10.11/Python-3.10.11.tgz \
