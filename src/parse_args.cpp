@@ -20,7 +20,8 @@ const std::regex default_pattern("(" LINUX_ABS_FPATH ")"
                                  "(:" LINUX_ABS_FPATH ")?",
                                  std::regex::ECMAScript);
 // match <image-name>/?<version>:?<tag>:?<abs-mount-path>
-// deviates from the official scheme: https://github.com/opencontainers/distribution-spec/blob/main/spec.md#pulling-manifests
+// deviates from the official scheme:
+// https://github.com/opencontainers/distribution-spec/blob/main/spec.md#pulling-manifests
 const std::regex repo_pattern("(" JFROG_IMAGE ")"
                               "(/[a-zA-Z0-9._-]+)?"
                               "(:[a-zA-Z0-9._-]+)?"
@@ -59,20 +60,16 @@ uenv_desc parse_uenv_string(const std::string &entry) {
   std::smatch match;
   std::regex_match(entry, match, repo_pattern);
 
-  auto name = match[1];
-  auto version = match[2];
-  auto tag = match[3];
-
-  if (name.matched) {
+  if (const auto name = match[1]; name.matched) {
     res.name = name.str();
   }
 
-  if (version.matched) {
-    res.version = std::string(version).erase(0, 1);
+  if (const auto version = match[2]; version.matched) {
+    res.version = version.str().erase(0, 1);
   }
 
-  if (tag.matched) {
-    res.tag = std::string(tag).erase(0, 1);
+  if (const auto tag = match[3]; tag.matched) {
+    res.tag = tag.str().erase(0, 1);
   }
 
   return res;
