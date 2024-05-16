@@ -173,7 +173,7 @@ find_repo_image(const uenv_desc &desc, const std::string &repo_path,
   return repo_path + "/images/" + shas.begin()->sha.value() + "/store.squashfs";
 }
 
-util::expected<std::vector<mount_entry>, std::runtime_error>
+util::expected<std::vector<mount_entry>, std::string>
 parse_arg(const std::string &arg, std::optional<std::string> uenv_repo_path,
           std::optional<std::string> uenv_arch) {
   std::vector<std::string> arguments = split(arg, ',');
@@ -191,12 +191,12 @@ parse_arg(const std::string &arg, std::optional<std::string> uenv_repo_path,
 
   std::vector<mount_entry> mount_entries;
   for (auto &entry : arguments) {
-    std::smatch match;
-    if (std::regex_match(entry, match, default_pattern)) {
+    if (std::smatch match; std::regex_match(entry, match, default_pattern)) {
       std::string image_path = match[1];
       std::string mount_point = get_mount_point(match[2]);
       mount_entries.emplace_back(mount_entry{image_path, mount_point});
-    } else if (std::regex_match(entry, match, repo_pattern)) {
+    } else if (std::smatch match;
+               std::regex_match(entry, match, repo_pattern)) {
       uenv_desc desc = parse_uenv_string(entry);
       if (!uenv_repo_path) {
         return util::unexpected("Attempting to open from uenv repository. But "

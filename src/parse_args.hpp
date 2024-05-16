@@ -1,7 +1,6 @@
 #pragma once
 #include "util/expected.hpp"
 #include <optional>
-#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -16,8 +15,8 @@ struct mount_entry {
 };
 
 /// parse list of `:` separated tuples, enforce absolute paths, sort output by
-/// mountpoint
-util::expected<std::vector<mount_entry>, std::runtime_error>
+/// mountpoint. The error state is an error string.
+util::expected<std::vector<mount_entry>, std::string>
 parse_arg(const std::string &arg,
           std::optional<std::string> uenv_repo_path = std::nullopt,
           std::optional<std::string> uenv_arch = std::nullopt);

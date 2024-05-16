@@ -185,7 +185,7 @@ int slurm_spank_init_post_opt(spank_t sp, int ac [[maybe_unused]],
     auto parsed_uenv_arg =
         parse_arg(args.uenv_arg.value(), uenv_repo_path, args.uenv_arch_arg);
     if (!parsed_uenv_arg) {
-      slurm_error("%s", parsed_uenv_arg.error().what());
+      slurm_error("%s", parsed_uenv_arg.error().c_str());
       return -ESPANK_ERROR;
     }
     mount_entries = *parsed_uenv_arg;
@@ -197,7 +197,7 @@ int slurm_spank_init_post_opt(spank_t sp, int ac [[maybe_unused]],
       auto parsed_uenv_arg =
           parse_arg(*uenv_mount_list, /*uenv repo*/ std::nullopt);
       if (!parsed_uenv_arg) {
-        slurm_error("%s", parsed_uenv_arg.error().what());
+        slurm_error("%s", parsed_uenv_arg.error().c_str());
         return -ESPANK_ERROR;
       }
       mount_entries = *parsed_uenv_arg;
