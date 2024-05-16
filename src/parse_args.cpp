@@ -65,10 +65,12 @@ uenv_desc parse_uenv_string(const std::string &entry) {
   }
 
   if (const auto version = match[2]; version.matched) {
+    // remove the leading '/'
     res.version = version.str().erase(0, 1);
   }
 
   if (const auto tag = match[3]; tag.matched) {
+    // remove the leading ':'
     res.tag = tag.str().erase(0, 1);
   }
 

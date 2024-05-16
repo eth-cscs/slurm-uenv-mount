@@ -24,10 +24,10 @@ parse_arg(const std::string &arg,
 
 struct uenv_desc {
   using entry_t = std::optional<std::string>;
-  entry_t name{std::nullopt};
-  entry_t version{std::nullopt};
-  entry_t tag{std::nullopt};
-  entry_t sha{std::nullopt};
+  entry_t name;
+  entry_t version;
+  entry_t tag;
+  entry_t sha;
 };
 
 } // namespace impl
