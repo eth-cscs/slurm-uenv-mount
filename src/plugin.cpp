@@ -1,6 +1,5 @@
 #include <cstdlib>
 #include <optional>
-#include <stdexcept>
 #include <string>
 #include <unistd.h>
 #include <vector>
@@ -8,7 +7,8 @@
 #include "config.hpp"
 #include "mount.hpp"
 #include "parse_args.hpp"
-#include "util/helper.hpp"
+#include "util/filesystem.hpp"
+#include "util/strings.hpp"
 
 extern "C" {
 #include <slurm/slurm_errno.h>
@@ -149,7 +149,23 @@ int slurm_spank_init(spank_t sp, int ac [[maybe_unused]],
 /// check if image, mountpoint is valid
 int init_post_opt_remote(spank_t sp,
                          const std::vector<mount_entry> &mount_entries) {
-  return do_mount(sp, mount_entries);
+  auto result = do_mount(mount_entries);
+  if (!result) {
+    slurm_spank_log("error mounting the requested uenv image: %s",
+                    result.error().c_str());
+    return -ESPANK_ERROR;
+  }
+
+  // export image, mountpoints to environment (for nested calls of sbatch)
+  std::string env_var;
+  for (auto &entry : mount_entries) {
+    auto abs_image = *util::realpath(entry.image_path);
+    auto abs_mount = *util::realpath(entry.mount_point);
+    env_var += "file://" + abs_image + ":" + abs_mount + ",";
+  }
+  spank_setenv(sp, UENV_MOUNT_LIST, env_var.c_str(), 1);
+
+  return ESPANK_SUCCESS;
 }
 
 /// check if image/mountpoint are valid
@@ -158,11 +174,11 @@ int init_post_opt_local_allocator(
     const std::vector<mount_entry> &mount_entries) {
   bool invalid_path = false;
   for (auto &entry : mount_entries) {
-    if (!is_file(entry.image_path)) {
+    if (!util::is_file(entry.image_path)) {
       invalid_path = true;
       slurm_error("Image does not exist: %s", entry.image_path.c_str());
     }
-    if (!is_valid_mountpoint(entry.mount_point)) {
+    if (!util::is_valid_mountpoint(entry.mount_point)) {
       invalid_path = true;
       slurm_error("Mountpoint is invalid: %s", entry.mount_point.c_str());
     }

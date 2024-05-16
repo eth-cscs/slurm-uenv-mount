@@ -1,20 +1,30 @@
-#include "parse_args.hpp"
-#include "sqlite/sqlite.hpp"
-#include "util/expected.hpp"
-#include "util/helper.hpp"
 #include <algorithm>
 #include <optional>
 #include <regex>
 #include <set>
-#include <stdexcept>
+
+#include <slurm/spank.h>
 
 #include "config.hpp"
-#include <slurm/spank.h>
+#include "parse_args.hpp"
+#include "sqlite/sqlite.hpp"
+#include "util/expected.hpp"
+#include "util/filesystem.hpp"
+#include "util/strings.hpp"
 
 // abs path
 #define LINUX_ABS_FPATH "/[^\\0,:]+"
 #define JFROG_IMAGE "[^\\0,:/]+"
+
 namespace impl {
+
+struct uenv_desc {
+  using entry_t = std::optional<std::string>;
+  entry_t name;
+  entry_t version;
+  entry_t tag;
+  entry_t sha;
+};
 
 const std::regex default_pattern("(" LINUX_ABS_FPATH ")"
                                  "(:" LINUX_ABS_FPATH ")?",
@@ -28,15 +38,50 @@ const std::regex repo_pattern("(" JFROG_IMAGE ")"
                               "(:" LINUX_ABS_FPATH ")?",
                               std::regex::ECMAScript);
 
-std::vector<std::string> split(const std::string &s, char delim) {
-  std::vector<std::string> elems;
-  std::stringstream ss(s);
-  std::string item;
-  while (std::getline(ss, item, delim)) {
-    if (!item.empty())
-      elems.push_back(item);
+// split a string on a character delimiter
+//
+// if drop_empty==false (default)
+//
+// ""       -> [""]
+// ","      -> ["", ""]
+// ",,"     -> ["", "", ""]
+// ",a"     -> ["", "a"]
+// "a,"     -> ["a", ""]
+// "a"      -> ["a"]
+// "a,b"    -> ["a", "b"]
+// "a,b,c"  -> ["a", "b", "c"]
+// "a,b,,c" -> ["a", "b", "", "c"]
+//
+// if drop_empty==true
+//
+// ""       -> []
+// ","      -> []
+// ",,"     -> []
+// ",a"     -> ["a"]
+// "a,"     -> ["a"]
+// "a"      -> ["a"]
+// "a,b"    -> ["a", "b"]
+// "a,b,c"  -> ["a", "b", "c"]
+// "a,b,,c" -> ["a", "b", "c"]
+std::vector<std::string> split(const std::string &s, const char delim,
+                               const bool drop_empty = false) {
+  std::vector<std::string> results;
+
+  auto pos = s.cbegin();
+  auto end = s.cend();
+  auto next = std::find(pos, end, delim);
+  while (next != end) {
+    if (!drop_empty || pos != next) {
+      results.emplace_back(pos, next);
+    }
+    pos = next + 1;
+    next = std::find(pos, end, delim);
   }
-  return elems;
+  if (!drop_empty || pos != next) {
+    results.emplace_back(pos, next);
+  }
+
+  return results;
 }
 
 /*
@@ -97,7 +142,7 @@ find_repo_image(const uenv_desc &desc, const std::string &repo_path,
                 std::optional<std::string> uenv_arch) {
   std::string dbpath = repo_path + "/index.db";
   // check if dbpath exists.
-  if (!is_file(dbpath)) {
+  if (!util::is_file(dbpath)) {
     return util::unexpected("Can't open uenv repo. " + dbpath +
                             " is not a file.");
   }
@@ -176,7 +221,7 @@ find_repo_image(const uenv_desc &desc, const std::string &repo_path,
 util::expected<std::vector<mount_entry>, std::string>
 parse_arg(const std::string &arg, std::optional<std::string> uenv_repo_path,
           std::optional<std::string> uenv_arch) {
-  std::vector<std::string> arguments = split(arg, ',');
+  std::vector<std::string> arguments = split(arg, ',', true);
 
   if (arguments.empty()) {
     return util::unexpected("No mountpoints given.");

@@ -1,10 +1,8 @@
-#include "helper.hpp"
 #include <regex>
-#include <sstream>
 #include <string>
 #include <vector>
 
-#include <sys/stat.h>
+#include "strings.hpp"
 
 extern "C" {
 #include <slurm/spank.h>
@@ -46,19 +44,4 @@ bool is_sha(const std::string &str) {
     return true;
   }
   return false;
-}
-
-bool is_file(const std::string &fname) {
-  struct stat mnt_stat;
-  // Check that the input squashfs file exists.
-  int sqsh_status = stat(fname.c_str(), &mnt_stat);
-  if (sqsh_status) {
-    slurm_spank_log("Path does not exist \"%s\"", fname.c_str());
-    return false;
-  }
-  if (!S_ISREG(mnt_stat.st_mode)) {
-    slurm_spank_log("\"%s\" is not a file", fname.c_str());
-    return false;
-  }
-  return true;
 }

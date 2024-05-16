@@ -1,8 +1,9 @@
-extern "C" {
-#include <slurm/spank.h>
-}
-#include "parse_args.hpp"
+#pragma once
+
 #include <string>
+
+#include "parse_args.hpp"
+#include "util/expected.hpp"
 
 #define UENV_MOUNT_LIST "UENV_MOUNT_LIST"
 
@@ -12,6 +13,7 @@ namespace impl {
 bool is_valid_mountpoint(const std::string &mount_point);
 
 /// mount images and export env variable UENV_MOUNT_LIST
-int do_mount(spank_t spank, const std::vector<mount_entry> &mount_entries);
+util::expected<std::string, std::string>
+do_mount(const std::vector<mount_entry> &mount_entries);
 
 } // namespace impl
