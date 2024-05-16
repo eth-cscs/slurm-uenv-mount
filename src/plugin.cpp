@@ -67,14 +67,13 @@ std::optional<std::string> getenv(spank_t sp, const char *var) {
 
   if (spank_context() == spank_context_t::S_CTX_LOCAL ||
       spank_context() == spank_context_t::S_CTX_ALLOCATOR) {
-    auto ret = std::getenv(var);
-    if (ret == nullptr) {
-      return std::nullopt;
+    if (const auto ret = std::getenv(var); ret != nullptr) {
+      return ret;
     }
-    return ret;
+    return std::nullopt;
   }
 
-  spank_err_t ret = spank_getenv(sp, var, buf, len);
+  const auto ret = spank_getenv(sp, var, buf, len);
 
   if (ret == ESPANK_ENV_NOEXIST) {
     return std::nullopt;
