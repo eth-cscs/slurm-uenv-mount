@@ -19,9 +19,8 @@ struct uenv_result {
   uenv_result() = delete;
 
   uenv_result(std::string name, std::string version, std::string tag,
-              std::string sha) :
-      name(name), version(version), tag(tag), sha(sha)
-  {}
+              std::string sha)
+      : name(name), version(version), tag(tag), sha(sha) {}
   uenv_result(SQLiteStatement &result)
       : uenv_result(result.getColumn(result.getColumnIndex("name")),
                     result.getColumn(result.getColumnIndex("version")),
