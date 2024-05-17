@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-#include "../util/expected.hpp"
+#include "expected.hpp"
 
 namespace db {
 

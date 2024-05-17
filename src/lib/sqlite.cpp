@@ -1,7 +1,7 @@
-#include "sqlite.hpp"
-
 #include <map>
 #include <sqlite3.h>
+
+#include "sqlite.hpp"
 
 std::map<sqlite_open, int> sqlite_oflag = {
     {sqlite_open::readonly, SQLITE_OPEN_READONLY}};

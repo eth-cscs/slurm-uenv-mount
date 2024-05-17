@@ -3,20 +3,18 @@
 #include <regex>
 #include <set>
 
-#include <slurm/spank.h>
-
 #include "config.hpp"
-#include "database/database.hpp"
 #include "parse_args.hpp"
-#include "util/expected.hpp"
-#include "util/filesystem.hpp"
-#include "util/strings.hpp"
+#include <lib/database.hpp>
+#include <lib/expected.hpp>
+#include <lib/filesystem.hpp>
+#include <lib/strings.hpp>
 
 // abs path
 #define LINUX_ABS_FPATH "/[^\\0,:]+"
 #define JFROG_IMAGE "[^\\0,:/]+"
 
-namespace impl {
+namespace util {
 
 const std::regex default_pattern("(" LINUX_ABS_FPATH ")"
                                  "(:" LINUX_ABS_FPATH ")?",
@@ -68,7 +66,7 @@ db::uenv_desc parse_uenv_string(const std::string &entry) {
   return res;
 }
 
-util::expected<std::vector<mount_entry>, std::string>
+util::expected<std::vector<util::mount_entry>, std::string>
 parse_arg(const std::string &arg, std::optional<std::string> uenv_repo_path,
           std::optional<std::string> uenv_arch) {
   std::vector<std::string> arguments = util::split(arg, ',', true);
@@ -84,12 +82,12 @@ parse_arg(const std::string &arg, std::optional<std::string> uenv_repo_path,
     return std::string{DEFAULT_MOUNT_POINT};
   };
 
-  std::vector<mount_entry> mount_entries;
+  std::vector<util::mount_entry> mount_entries;
   for (auto &entry : arguments) {
     if (std::smatch match; std::regex_match(entry, match, default_pattern)) {
       std::string image_path = match[1];
       std::string mount_point = get_mount_point(match[2]);
-      mount_entries.emplace_back(mount_entry{image_path, mount_point});
+      mount_entries.emplace_back(util::mount_entry{image_path, mount_point});
     } else if (std::smatch match;
                std::regex_match(entry, match, repo_pattern)) {
       auto desc = parse_uenv_string(entry);
@@ -103,7 +101,7 @@ parse_arg(const std::string &arg, std::optional<std::string> uenv_repo_path,
         return util::unexpected(image_path.error());
       }
       mount_entries.emplace_back(
-          mount_entry{image_path.value(), get_mount_point(match[4])});
+          util::mount_entry{image_path.value(), get_mount_point(match[4])});
     } else {
       // no match found
       return util::unexpected(
@@ -125,7 +123,7 @@ parse_arg(const std::string &arg, std::optional<std::string> uenv_repo_path,
   }
   // sort by mountpoint
   std::sort(mount_entries.begin(), mount_entries.end(),
-            [](const mount_entry &a, const mount_entry &b) {
+            [](const util::mount_entry &a, const util::mount_entry &b) {
               return a.mount_point < b.mount_point;
             });
 
@@ -149,4 +147,4 @@ parse_arg(const std::string &arg, std::optional<std::string> uenv_repo_path,
   return mount_entries;
 }
 
-} // namespace impl
+} // namespace util

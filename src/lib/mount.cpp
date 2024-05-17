@@ -12,14 +12,12 @@
 #include <unistd.h>
 
 #include <libmount/libmount.h>
-#include <slurm/slurm_errno.h>
 
+#include "expected.hpp"
+#include "filesystem.hpp"
 #include "mount.hpp"
-#include "parse_args.hpp"
-#include "util/expected.hpp"
-#include "util/filesystem.hpp"
 
-namespace impl {
+namespace util {
 
 util::expected<std::string, std::string>
 do_mount(const std::vector<mount_entry> &mount_entries) {
@@ -86,4 +84,4 @@ do_mount(const std::vector<mount_entry> &mount_entries) {
   return "succesfully mounted";
 }
 
-} // namespace impl
+} // namespace util

@@ -5,10 +5,10 @@
 #include <vector>
 
 #include "config.hpp"
-#include "mount.hpp"
-#include "parse_args.hpp"
-#include "util/filesystem.hpp"
-#include "util/strings.hpp"
+#include <lib/filesystem.hpp>
+#include <lib/mount.hpp>
+#include <lib/parse_args.hpp>
+#include <lib/strings.hpp>
 
 extern "C" {
 #include <slurm/slurm_errno.h>
@@ -148,7 +148,7 @@ int slurm_spank_init(spank_t sp, int ac [[maybe_unused]],
 
 /// check if image, mountpoint is valid
 int init_post_opt_remote(spank_t sp,
-                         const std::vector<mount_entry> &mount_entries) {
+                         const std::vector<util::mount_entry> &mount_entries) {
   auto result = do_mount(mount_entries);
   if (!result) {
     slurm_spank_log("error mounting the requested uenv image: %s",
@@ -171,7 +171,7 @@ int init_post_opt_remote(spank_t sp,
 /// check if image/mountpoint are valid
 int init_post_opt_local_allocator(
     spank_t sp [[maybe_unused]],
-    const std::vector<mount_entry> &mount_entries) {
+    const std::vector<util::mount_entry> &mount_entries) {
   bool invalid_path = false;
   for (auto &entry : mount_entries) {
     if (!util::is_file(entry.image_path)) {
@@ -195,11 +195,11 @@ int slurm_spank_init_post_opt(spank_t sp, int ac [[maybe_unused]],
                               char **av [[maybe_unused]]) {
 
   auto uenv_repo_path = get_uenv_repo_path(sp);
-  std::vector<mount_entry> mount_entries;
+  std::vector<util::mount_entry> mount_entries;
   if (args.uenv_arg) {
     // parse --uenv argument, jfrog/oras is optional
-    auto parsed_uenv_arg =
-        parse_arg(args.uenv_arg.value(), uenv_repo_path, args.uenv_arch_arg);
+    auto parsed_uenv_arg = util::parse_arg(args.uenv_arg.value(),
+                                           uenv_repo_path, args.uenv_arch_arg);
     if (!parsed_uenv_arg) {
       slurm_error("%s", parsed_uenv_arg.error().c_str());
       return -ESPANK_ERROR;
@@ -211,7 +211,7 @@ int slurm_spank_init_post_opt(spank_t sp, int ac [[maybe_unused]],
       // UENV_MOUNT_LIST is assumed to be fully processed, we don't query sqlite
       // here
       auto parsed_uenv_arg =
-          parse_arg(*uenv_mount_list, /*uenv repo*/ std::nullopt);
+          util::parse_arg(*uenv_mount_list, /*uenv repo*/ std::nullopt);
       if (!parsed_uenv_arg) {
         slurm_error("%s", parsed_uenv_arg.error().c_str());
         return -ESPANK_ERROR;

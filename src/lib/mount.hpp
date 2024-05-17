@@ -1,13 +1,19 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
-#include "parse_args.hpp"
-#include "util/expected.hpp"
+#include "expected.hpp"
 
 #define UENV_MOUNT_LIST "UENV_MOUNT_LIST"
 
-namespace impl {
+namespace util {
+
+struct mount_entry {
+  // enum protocol p;
+  std::string image_path;
+  std::string mount_point;
+};
 
 /// check if mountpoint is an existent directory
 bool is_valid_mountpoint(const std::string &mount_point);
@@ -16,4 +22,4 @@ bool is_valid_mountpoint(const std::string &mount_point);
 util::expected<std::string, std::string>
 do_mount(const std::vector<mount_entry> &mount_entries);
 
-} // namespace impl
+} // namespace util
