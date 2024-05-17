@@ -74,11 +74,10 @@ do_mount(const std::vector<mount_entry> &mount_entries) {
     const bool success = rc == 0 && mnt_context_get_status(cxt) == 1;
     if (!success) {
       char code_buf[256];
-      const auto x =
-          mnt_context_get_excode(cxt, rc, code_buf, sizeof(code_buf));
+      mnt_context_get_excode(cxt, rc, code_buf, sizeof(code_buf));
       const char *target_buf = mnt_context_get_target(cxt);
       // careful: mnt_context_get_target can return NULL
-      std::string target = (target_buf == nullptr) ? target_buf : "?";
+      std::string target = (target_buf == nullptr) ? "?" : target_buf;
 
       return util::unexpected(target + ": " + code_buf);
     }
