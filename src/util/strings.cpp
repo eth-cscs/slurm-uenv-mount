@@ -6,13 +6,20 @@
 
 namespace util {
 
-std::vector<std::string> split(const std::string &s, char delim) {
+std::vector<std::string> split(const std::string &s, char delim,
+                               const bool drop_empty) {
   std::vector<std::string> elems;
   std::stringstream ss(s);
   std::string item;
   while (std::getline(ss, item, delim)) {
-    if (!item.empty())
+    if (!item.empty() || !drop_empty)
       elems.push_back(item);
+  }
+
+  if (!s.empty() && s.back() == delim) {
+    if (!drop_empty) {
+      elems.push_back("");
+    }
   }
   return elems;
 }
