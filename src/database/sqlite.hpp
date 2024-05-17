@@ -1,3 +1,6 @@
+#pragma once
+
+#include <exception>
 #include <string>
 
 struct sqlite3_stmt;
@@ -5,7 +8,14 @@ struct sqlite3;
 
 enum class sqlite_open : int { readonly };
 
-class SQLiteError;
+class SQLiteError : public std::exception {
+public:
+  SQLiteError(const std::string &msg) : msg(msg) {}
+  const char *what() const noexcept override { return msg.c_str(); }
+
+private:
+  std::string msg;
+};
 
 class SQLiteStatement;
 
@@ -32,10 +42,10 @@ public:
   SQLiteStatement(SQLiteDB &db, const std::string &query);
   SQLiteStatement(const SQLiteStatement &) = delete;
   SQLiteStatement operator=(const SQLiteStatement &) = delete;
-  std::string getColumnType(int i);
-  SQLiteColumn getColumn(int i);
-  int getColumnIndex(const std::string &name);
-  void bind(const std::string& name, const std::string& value);
+  std::string getColumnType(int i) const;
+  SQLiteColumn getColumn(int i) const;
+  int getColumnIndex(const std::string &name) const;
+  void bind(const std::string &name, const std::string &value);
   bool execute();
 
   virtual ~SQLiteStatement();
@@ -53,12 +63,12 @@ private:
 
 class SQLiteColumn {
 public:
-  SQLiteColumn(SQLiteStatement &statement, int index);
-  std::string getColumnName() const;
+  SQLiteColumn(const SQLiteStatement &statement, int index);
+  std::string name() const;
   operator int() const;
   operator std::string() const;
 
 private:
-  SQLiteStatement &statement;
-  int index;
+  const SQLiteStatement &statement;
+  const int index;
 };

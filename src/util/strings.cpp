@@ -4,9 +4,7 @@
 
 #include "strings.hpp"
 
-extern "C" {
-#include <slurm/spank.h>
-}
+namespace util {
 
 std::vector<std::string> split(const std::string &s, char delim) {
   std::vector<std::string> elems;
@@ -45,3 +43,5 @@ bool is_sha(const std::string &str) {
   }
   return false;
 }
+
+} // namespace util

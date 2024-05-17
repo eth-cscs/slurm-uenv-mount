@@ -1,19 +1,10 @@
 #include "sqlite.hpp"
-#include <exception>
+
 #include <map>
 #include <sqlite3.h>
 
 std::map<sqlite_open, int> sqlite_oflag = {
     {sqlite_open::readonly, SQLITE_OPEN_READONLY}};
-
-class SQLiteError : public std::exception {
-public:
-  SQLiteError(const std::string &msg) : msg(msg) {}
-  const char *what() const noexcept override { return msg.c_str(); }
-
-private:
-  std::string msg;
-};
 
 SQLiteDB::SQLiteDB(const std::string &fname, sqlite_open flag) {
   int rc =
@@ -26,10 +17,10 @@ SQLiteDB::SQLiteDB(const std::string &fname, sqlite_open flag) {
 SQLiteDB::~SQLiteDB() { sqlite3_close(this->db); }
 
 /// SQLiteColumn
-SQLiteColumn::SQLiteColumn(SQLiteStatement &statement, int index)
+SQLiteColumn::SQLiteColumn(const SQLiteStatement &statement, int index)
     : statement(statement), index(index) {}
 
-std::string SQLiteColumn::getColumnName() const {
+std::string SQLiteColumn::name() const {
   return sqlite3_column_name(this->statement.stmt, this->index);
 }
 
@@ -58,18 +49,20 @@ SQLiteStatement::SQLiteStatement(SQLiteDB &db, const std::string &query)
   column_count = sqlite3_column_count(this->stmt);
 }
 
-int SQLiteStatement::getColumnIndex(const std::string &name) {
+int SQLiteStatement::getColumnIndex(const std::string &name) const {
   for (int i = 0; i < this->column_count; ++i) {
-    if (this->getColumn(i).getColumnName() == name)
+    if (this->getColumn(i).name() == name)
       return i;
   }
   return -1;
 }
 
-void SQLiteStatement::bind(const std::string& name, const std::string& value) {
+void SQLiteStatement::bind(const std::string &name, const std::string &value) {
   int i = sqlite3_bind_parameter_index(this->stmt, name.c_str());
-  if(sqlite3_bind_text(this->stmt, i, value.c_str(), -1, SQLITE_STATIC) != SQLITE_OK) {
-    throw SQLiteError(std::string("Failed to bind parameter: ") + sqlite3_errmsg(this->db.get()));
+  if (sqlite3_bind_text(this->stmt, i, value.c_str(), -1, SQLITE_STATIC) !=
+      SQLITE_OK) {
+    throw SQLiteError(std::string("Failed to bind parameter: ") +
+                      sqlite3_errmsg(this->db.get()));
   }
 }
 
@@ -79,7 +72,7 @@ void SQLiteStatement::checkIndex(int i) const {
   }
 }
 
-std::string SQLiteStatement::getColumnType(int i) {
+std::string SQLiteStatement::getColumnType(int i) const {
   checkIndex(i);
   const char *result = sqlite3_column_decltype(this->stmt, i);
   if (!result) {
@@ -89,7 +82,7 @@ std::string SQLiteStatement::getColumnType(int i) {
   }
 }
 
-SQLiteColumn SQLiteStatement::getColumn(int i) {
+SQLiteColumn SQLiteStatement::getColumn(int i) const {
   checkIndex(i);
   if (this->rc != SQLITE_ROW) {
     throw SQLiteError("Statement invalid");
