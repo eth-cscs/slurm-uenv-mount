@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <set>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -18,7 +19,8 @@ struct uenv_result {
   uenv_result() = delete;
 
   uenv_result(std::string name, std::string version, std::string tag,
-              std::string sha);
+              std::string sha)
+      : name(name), version(version), tag(tag), sha(sha) {}
   uenv_result(SQLiteStatement &result)
       : uenv_result(result.getColumn(result.getColumnIndex("name")),
                     result.getColumn(result.getColumnIndex("sha256")),

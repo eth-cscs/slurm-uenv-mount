@@ -6,15 +6,24 @@
 
 namespace util {
 
-std::vector<std::string> split(const std::string &s, char delim) {
-  std::vector<std::string> elems;
-  std::stringstream ss(s);
-  std::string item;
-  while (std::getline(ss, item, delim)) {
-    if (!item.empty())
-      elems.push_back(item);
+std::vector<std::string> split(const std::string &s, const char delim,
+                               const bool drop_empty) {
+  std::vector<std::string> results;
+
+  auto pos = s.cbegin();
+  auto end = s.cend();
+  auto next = std::find(pos, end, delim);
+  while (next != end) {
+    if (!drop_empty || pos != next) {
+      results.emplace_back(pos, next);
+    }
+    pos = next + 1;
+    next = std::find(pos, end, delim);
   }
-  return elems;
+  if (!drop_empty || pos != next) {
+    results.emplace_back(pos, next);
+  }
+  return results;
 }
 
 bool is_full_sha256(const std::string &str) {

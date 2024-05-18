@@ -15,16 +15,35 @@ configure_file(input : 'src/config.hpp.in',
 libmount_dep = dependency('mount')
 sqlite3_dep = dependency('sqlite3')
 
+lib_src = ['src/lib/parse_args.cpp',
+           'src/lib/database.cpp',
+           'src/lib/filesystem.cpp',
+           'src/lib/mount.cpp',
+           'src/lib/sqlite.cpp',
+           'src/lib/strings.cpp']
+
+module_src = ['src/plugin.cpp'] + lib_src
+
+module_inc = include_directories('src')
+
+module_dep = [libmount_dep, sqlite3_dep]
+
 shared_module('slurm-uenv-mount',
-              sources: ['src/plugin.cpp',
-                        'src/lib/parse_args.cpp',
-                        'src/lib/database.cpp',
-                        'src/lib/filesystem.cpp',
-                        'src/lib/mount.cpp',
-                        'src/lib/sqlite.cpp',
-                        'src/lib/strings.cpp'],
-              dependencies: [libmount_dep, sqlite3_dep],
-              include_directories: ['src'],
+              sources: module_src,
+              dependencies: module_dep,
+              include_directories: module_inc,
               cpp_args: ['-Wall', '-Wpedantic', '-Wextra'],
               install: true)
 
+unit_inc = include_directories('external/catch2')
+
+unit_src = ['external/catch2/catch_amalgamated.cpp',
+            'tests/unit/strings.cpp',]
+unit_src += lib_src
+
+unit = executable('unit',
+                  sources: unit_src,
+                  include_directories: [unit_inc, module_inc],
+                  dependencies: module_dep,
+                  build_by_default: true,
+                  install: false)
