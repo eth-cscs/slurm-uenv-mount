@@ -23,10 +23,9 @@ struct uenv_result {
       : name(name), version(version), tag(tag), sha(sha) {}
   uenv_result(SQLiteStatement &result)
       : uenv_result(result.getColumn(result.getColumnIndex("name")),
-                    result.getColumn(result.getColumnIndex("sha256")),
+                    result.getColumn(result.getColumnIndex("version")),
                     result.getColumn(result.getColumnIndex("tag")),
-                    result.getColumn(result.getColumnIndex("version"))) {}
-  friend bool operator<(const uenv_result &, const uenv_result &);
+                    result.getColumn(result.getColumnIndex("sha256"))) {}
 };
 
 util::expected<std::string, std::string>
