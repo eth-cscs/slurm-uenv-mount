@@ -1,3 +1,5 @@
+#include <vector>
+
 #include <catch_amalgamated.hpp>
 
 #include <lib/strings.hpp>

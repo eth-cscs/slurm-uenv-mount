@@ -38,6 +38,7 @@ shared_module('slurm-uenv-mount',
 unit_inc = include_directories('external/catch2')
 
 unit_src = ['external/catch2/catch_amalgamated.cpp',
+            'tests/unit/parse_args.cpp',
             'tests/unit/strings.cpp',]
 unit_src += lib_src
 
