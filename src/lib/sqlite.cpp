@@ -12,7 +12,7 @@ SQLiteDB::SQLiteDB(const std::string &fname, sqlite_open flag) {
   if (rc != SQLITE_OK) {
     throw SQLiteError("Couldn't open database");
   }
-};
+}
 
 SQLiteDB::~SQLiteDB() { sqlite3_close(this->db); }
 
