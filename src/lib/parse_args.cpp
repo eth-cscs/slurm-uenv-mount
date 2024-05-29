@@ -16,7 +16,8 @@
 
 namespace util {
 
-const std::regex default_pattern("(" LINUX_ABS_FPATH ")"
+const std::regex default_pattern("^(?:(file:\\/\\/))?"
+                                 "(" LINUX_ABS_FPATH ")"
                                  "(:" LINUX_ABS_FPATH ")?",
                                  std::regex::ECMAScript);
 // match <image-name>/?<version>:?<tag>:?<abs-mount-path>
@@ -85,8 +86,8 @@ parse_arg(const std::string &arg, std::optional<std::string> uenv_repo_path,
   std::vector<util::mount_entry> mount_entries;
   for (auto &entry : arguments) {
     if (std::smatch match; std::regex_match(entry, match, default_pattern)) {
-      std::string image_path = match[1];
-      std::string mount_point = get_mount_point(match[2]);
+      std::string image_path = match[2];
+      std::string mount_point = get_mount_point(match[3]);
       mount_entries.emplace_back(util::mount_entry{image_path, mount_point});
     } else if (std::smatch match;
                std::regex_match(entry, match, repo_pattern)) {
