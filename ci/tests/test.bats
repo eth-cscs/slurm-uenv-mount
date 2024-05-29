@@ -81,6 +81,13 @@ EOF
     run_srun  sh -c 'findmnt /user-environment && findmnt /user-profilers && findmnt /user-tools'
 }
 
+@test "uenv_mount_list_environment_backward_compat" {
+    # older versions of squashfs-mount used `file://` prefix for <abs-path> in UENV_MOUNT_LIST
+    # check that if images have been mounted `uenv --uenv=...`, the slurm plugin recogines UENV_MOUNT_LIST and mounts the same images
+    export UENV_MOUNT_LIST="file://${SQFSDIR}/binaries.sqfs,${SQFSDIR}/profilers.sqfs:/user-profilers,file://${SQFSDIR}/tools.sqfs:/user-tools"
+    run_srun  sh -c 'findmnt /user-environment && findmnt /user-profilers && findmnt /user-tools'
+}
+
 @test "sbatch_override_in_srun" {
     # check that images mounted via sbatch --uenv are overriden when `--uenv` flag is given to srun
     run_sbatch <<EOF
