@@ -102,6 +102,15 @@ srun --uenv=${SQFSDIR}/binaries.sqfs:/user-tools bash -c '! findmnt /user-enviro
 EOF
 }
 
+@test "plain_sbatch" {
+    # check that images mounted via sbatch --uenv are overriden when `--uenv` flag is given to srun
+    run_sbatch <<EOF
+#!/bin/bash
+
+srun true
+EOF
+}
+
 @test "duplicate_mountpoints_fail" {
     run_srun_unchecked --uenv ${SQFSDIR}/binaries.sqfs,${SQFSDIR}/tools.sqfs true
     assert_output --partial 'Duplicate mountpoints found'
