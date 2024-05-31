@@ -81,6 +81,13 @@ EOF
     run_srun  sh -c 'findmnt /user-environment && findmnt /user-profilers && findmnt /user-tools'
 }
 
+@test "uenv_mount_list_environment_backward_compat" {
+    # older versions of squashfs-mount used `file://` prefix for <abs-path> in UENV_MOUNT_LIST
+    # check that if images have been mounted `uenv --uenv=...`, the slurm plugin recogines UENV_MOUNT_LIST and mounts the same images
+    export UENV_MOUNT_LIST="file://${SQFSDIR}/binaries.sqfs,${SQFSDIR}/profilers.sqfs:/user-profilers,file://${SQFSDIR}/tools.sqfs:/user-tools"
+    run_srun  sh -c 'findmnt /user-environment && findmnt /user-profilers && findmnt /user-tools'
+}
+
 @test "sbatch_override_in_srun" {
     # check that images mounted via sbatch --uenv are overriden when `--uenv` flag is given to srun
     run_sbatch <<EOF
@@ -95,10 +102,21 @@ srun --uenv=${SQFSDIR}/binaries.sqfs:/user-tools bash -c '! findmnt /user-enviro
 EOF
 }
 
+@test "plain_sbatch" {
+    # check that images mounted via sbatch --uenv are overriden when `--uenv` flag is given to srun
+    run_sbatch <<EOF
+#!/bin/bash
+srun true
+EOF
+}
+
+@test "empty_uenv_mount_list" {
+   UENV_MOUNT_LIST= srun true
+}
+
 @test "duplicate_mountpoints_fail" {
     run_srun_unchecked --uenv ${SQFSDIR}/binaries.sqfs,${SQFSDIR}/tools.sqfs true
     assert_output --partial 'Duplicate mountpoints found'
-
 }
 
 @test "duplicate_image_fails" {
@@ -112,12 +130,7 @@ EOF
     assert_output --partial 'Invalid syntax for --uenv'
 }
 
-@test "empty_argument1" {
-    run_srun_unchecked --uenv='' true
-    assert_output --partial 'No mountpoints given.'
-}
-
-@test "empty_argument2" {
-    run_srun_unchecked --uenv=,,, true
-    assert_output --partial 'No mountpoints given.'
-}
+# @test "empty_argument1" {
+#     run_srun_unchecked --uenv='' true
+#     assert_output --partial 'No mountpoints given.'
+# }

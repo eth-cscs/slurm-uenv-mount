@@ -21,8 +21,9 @@ namespace util {
 
 util::expected<std::string, std::string>
 do_mount(const std::vector<mount_entry> &mount_entries) {
-  if (mount_entries.size() == 0)
+  if (mount_entries.size() == 0) {
     return "nothing to mount";
+  }
   if (unshare(CLONE_NEWNS) != 0) {
     return util::unexpected("Failed to unshare the mount namespace");
   }
