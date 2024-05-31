@@ -161,7 +161,7 @@ int init_post_opt_remote(spank_t sp,
   for (auto &entry : mount_entries) {
     auto abs_image = *util::realpath(entry.image_path);
     auto abs_mount = *util::realpath(entry.mount_point);
-    env_var += "file://" + abs_image + ":" + abs_mount + ",";
+    env_var += abs_image + ":" + abs_mount + ",";
   }
   if (mount_entries.size() > 0) {
     spank_setenv(sp, UENV_MOUNT_LIST, env_var.c_str(), 1);
