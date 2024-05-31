@@ -111,6 +111,10 @@ srun true
 EOF
 }
 
+@test "empty_uenv_mount_list" {
+   UENV_MOUNT_LIST= srun true
+}
+
 @test "duplicate_mountpoints_fail" {
     run_srun_unchecked --uenv ${SQFSDIR}/binaries.sqfs,${SQFSDIR}/tools.sqfs true
     assert_output --partial 'Duplicate mountpoints found'
