@@ -73,7 +73,7 @@ parse_arg(const std::string &arg, std::optional<std::string> uenv_repo_path,
   std::vector<std::string> arguments = util::split(arg, ',', true);
 
   if (arguments.empty()) {
-    return util::unexpected("No mountpoints given.");
+    return {};
   }
 
   auto get_mount_point = [](std::ssub_match sub_match) -> std::string {
