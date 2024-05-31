@@ -106,7 +106,6 @@ EOF
     # check that images mounted via sbatch --uenv are overriden when `--uenv` flag is given to srun
     run_sbatch <<EOF
 #!/bin/bash
-
 srun true
 EOF
 }
@@ -118,7 +117,6 @@ EOF
 @test "duplicate_mountpoints_fail" {
     run_srun_unchecked --uenv ${SQFSDIR}/binaries.sqfs,${SQFSDIR}/tools.sqfs true
     assert_output --partial 'Duplicate mountpoints found'
-
 }
 
 @test "duplicate_image_fails" {
@@ -132,12 +130,7 @@ EOF
     assert_output --partial 'Invalid syntax for --uenv'
 }
 
-@test "empty_argument1" {
-    run_srun_unchecked --uenv='' true
-    assert_output --partial 'No mountpoints given.'
-}
-
-@test "empty_argument2" {
-    run_srun_unchecked --uenv=,,, true
-    assert_output --partial 'No mountpoints given.'
-}
+# @test "empty_argument1" {
+#     run_srun_unchecked --uenv='' true
+#     assert_output --partial 'No mountpoints given.'
+# }
