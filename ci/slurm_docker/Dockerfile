@@ -50,15 +50,15 @@ RUN mkdir -p /var/spool/slurmctld && chown slurm /var/spool/slurmctld && chmod u
 RUN mkdir -p /var/spool/slurmd    && chown slurm /var/spool/slurmd    && chmod u+rwx /var/spool/slurmd
 
 
-COPY install_slurm.sh .
+COPY ci/slurm_docker/install_slurm.sh .
 
 RUN  ./install_slurm.sh ${SLURM_VERSION} ${SLURM_ROOT} ${SLURM_CONFDIR} --enable-multiple-slurmd
 
 RUN  mkdir -p       ${SLURM_CONFDIR}
-COPY cgroup.conf    ${SLURM_CONFDIR}
-COPY slurm.conf.in  ${SLURM_CONFDIR}
+COPY ci/slurm_docker/cgroup.conf    ${SLURM_CONFDIR}
+COPY ci/slurm_docker/slurm.conf.in  ${SLURM_CONFDIR}
 
-COPY entrypoint.sh .
+COPY ci/slurm_docker/entrypoint.sh .
 ENTRYPOINT ["./entrypoint.sh"]
 CMD ["bash"]
 
