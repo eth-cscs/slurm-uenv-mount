@@ -4,8 +4,8 @@ include:
 stages:
   - baseimage
 
-build aarch64:
-  extends: .container-builder-cscs-gh200
+build zen2:
+  extends: .container-builder-cscs-zen2
   stage: baseimage
   timeout: 10h
   variables:
