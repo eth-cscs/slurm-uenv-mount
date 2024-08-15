@@ -26,8 +26,8 @@ RUN zypper install -y       \
     dbus-1                  \
     dbus-1-devel            \
     make                    \
-    gcc                     \
-    gcc-c++                 \
+    gcc12                   \
+    gcc12-c++               \
     curl                    \
     tar                     \
     bzip2                   \
