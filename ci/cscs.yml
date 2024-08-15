@@ -19,6 +19,8 @@ build:
   needs: ["build zen2"]
   stage: buildtest
   image: $CSCS_REGISTRY_PATH/base/public/slurm-uenv-mount:$CI_COMMIT_SHA
+  variables:
+    SBATCH_ACCOUNT: csstaff
   script:
     - |
       CXX=g++-12 CC=gcc-12 meson setup builddir
