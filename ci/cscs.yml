@@ -12,8 +12,7 @@ build zen2:
   variables:
     DOCKERFILE: ci/slurm_docker/Dockerfile
     WATCH_FILECHANGES: ci/slurm_docker/Dockerfile ci/slurm_docker/cgroup.conf ci/slurm_docker/entrypoint.sh ci/slurm_docker/install_slurm.sh ci/slurm_docker/slurm.conf.in
-    PERSIST_IMAGE_NAME: $CSCS_REGISTRY_PATH/base/slurm-uenv-mount
-
+    PERSIST_IMAGE_NAME: $CSCS_REGISTRY_PATH/base/slurm-uenv-mount:$CI_COMMIT_SHA
 
 build:
   extends: .container-runner-lightweight-zen2
