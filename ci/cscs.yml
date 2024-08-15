@@ -1,5 +1,5 @@
 include:
-  - remote: 'https://gitlab.com/cscs-ci/recipes/-/raw/master/templates/v2/.ci-ext.yml'
+- remote: 'https://gitlab.com/cscs-ci/recipes/-/raw/master/templates/v2/.ci-ext.yml'
 
 stages:
   - baseimage
@@ -12,3 +12,24 @@ build zen2:
     DOCKERFILE: ci/slurm_docker/Dockerfile
     WATCH_FILECHANGES: ci/slurm_docker/Dockerfile ci/slurm_docker/cgroup.conf ci/slurm_docker/entrypoint.sh ci/slurm_docker/install_slurm.sh ci/slurm_docker/slurm.conf.in
     PERSIST_IMAGE_NAME: $CSCS_REGISTRY_PATH/base/slurm-uenv-mount
+
+
+build:
+  extends: .container-runner-lightweight-zen2
+  stage: test
+  steps:
+  - uses: actions/checkout@v3
+  - run: |
+      meson setup builddir
+      meson install -C builddir
+  - run:
+      echo "required /usr/local/lib64/libslurm-uenv-mount.so" > /etc/slurm/plugstack.conf
+  - run: |
+      # initialization
+      /entrypoint.sh
+      sinfo
+  - run: |
+      echo "Run tests in bash-bats"
+      su testuser -c bash <<\EOF
+      bats ci/tests
+      EOF
