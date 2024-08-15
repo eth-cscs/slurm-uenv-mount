@@ -19,6 +19,7 @@ build:
   extends: .container-runner-lightweight-zen2
   needs: ["build zen2"]
   stage: buildtest
+  image: $CSCS_REGISTRY_PATH/base/slurm-uenv-mount:$CI_COMMIT_SHA
   script:
     - |
       meson setup builddir
