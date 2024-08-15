@@ -15,7 +15,7 @@ build zen2:
     PERSIST_IMAGE_NAME: $CSCS_REGISTRY_PATH/base/public/slurm-uenv-mount:$CI_COMMIT_SHA
 
 build:
-  extends: .container-runner-daint-mc
+  extends: .container-runner-eiger
   needs: ["build zen2"]
   stage: buildtest
   image: $CSCS_REGISTRY_PATH/base/public/slurm-uenv-mount:$CI_COMMIT_SHA
