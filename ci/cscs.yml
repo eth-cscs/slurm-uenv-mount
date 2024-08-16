@@ -17,27 +17,19 @@ build slurm base:
   timeout: 10h
   variables:
     CSCS_NOTIFICATION_CONTEXT: "$slurm_version"
-    DOCKERFILE: ci/slurm_docker/Dockerfile
+    DOCKERFILE: ci/slurm_docker/Dockerfile.base
     DOCKER_BUILD_ARGS: '["SLURM_VERSION=$slurm_version"]'
-    WATCH_FILECHANGES: ci/slurm_docker/Dockerfile ci/slurm_docker/cgroup.conf ci/slurm_docker/entrypoint.sh ci/slurm_docker/install_slurm.sh ci/slurm_docker/slurm.conf.in
-    PERSIST_IMAGE_NAME: $CSCS_REGISTRY_PATH/base/public/slurm-uenv-mount
+    WATCH_FILECHANGES: ci/slurm_docker/Dockerfile.base ci/slurm_docker/cgroup.conf ci/slurm_docker/entrypoint.sh ci/slurm_docker/install_slurm.sh ci/slurm_docker/slurm.conf.in
+    PERSIST_IMAGE_NAME: $CSCS_REGISTRY_PATH/base/public/slurm-base
 
-# build:
-#   extends: .container-builder-cscs-zen2
-#   needs: ["build slurm base"]
-#   stage: buildtest
-#   image: $CSCS_REGISTRY_PATH/base/public/slurm-uenv-mount:$CI_COMMIT_SHA
-#   script:
-#     - |
-#       echo $PWD
-#       ls -al
-#       CXX=g++-12 CC=gcc-12 meson setup builddir
-#       meson install -C builddir
-#       echo "required /usr/local/lib64/libslurm-uenv-mount.so" > /etc/slurm/plugstack.conf
-#       # initialization
-#       /entrypoint.sh
-#       sinfo
-#       echo "Run tests in bash-bats"
-#       su testuser -c bash <<\EOF
-#       bats ci/tests
-#       EOF
+build:
+  extends: [.container-builder-cscs-zen2, .my-dynamic-image-name]
+  needs: ["build slurm base"]
+  stage: buildtest
+  variables:
+    CSCS_REBUILD_POLICY: always
+    CSCS_NOTIFICATION_CONTEXT: "$slurm_version"
+    DOCKERFILE: ci/slurm_docker/Dockerfile
+    DOCKER_BUILD_ARGS: '["BASE_IMAGE=${BASE_IMAGE}"]'
+    WATCH_FILECHANGES: ci/slurm_docker/Dockerfile  ci/slurm_docker/install_and_test.sh
+    PERSIST_IMAGE_NAME: $CSCS_REGISTRY_PATH/base/public/slurm-uenv-mount
