@@ -8,7 +8,7 @@ stages:
 .my-dynamic-image-name:
   extends: [.dynamic-image-name]
   before_script:
-    - DOCKER_TAG=`echo $(cat $WATCH_FILECHANGES; echo -n $slurm_version) | sha256sum | head -c 16`
+    - DOCKER_TAG=`echo $(eval cat $WATCH_FILECHANGES; echo -n $slurm_version) | sha256sum | head -c 16`
     - export PERSIST_IMAGE_NAME=$PERSIST_IMAGE_NAME:$DOCKER_TAG
 
 build slurm base:
@@ -20,7 +20,7 @@ build slurm base:
     DOCKERFILE: ci/slurm_docker/Dockerfile
     DOCKER_BUILD_ARGS: '["SLURM_VERSION=$slurm_version"]'
     WATCH_FILECHANGES: ci/slurm_docker/Dockerfile ci/slurm_docker/cgroup.conf ci/slurm_docker/entrypoint.sh ci/slurm_docker/install_slurm.sh ci/slurm_docker/slurm.conf.in
-    PERSIST_IMAGE_NAME: $CSCS_REGISTRY_PATH/base/public/slurm-uenv-mount:$CI_COMMIT_SHA-$slurm_version
+    PERSIST_IMAGE_NAME: $CSCS_REGISTRY_PATH/base/public/slurm-uenv-mount
 
 # build:
 #   extends: .container-builder-cscs-zen2
