@@ -8,7 +8,7 @@ stages:
 .my-dynamic-image-name:
   extends: [.dynamic-image-name]
   before_script:
-    - DOCKER_TAG=`eval $(cat $WATCH_FILECHANGES; echo -n $slurm_version) | sha256sum | head -c 16`
+    - DOCKER_TAG=`echo $(cat $WATCH_FILECHANGES; echo -n $slurm_version) | sha256sum | head -c 16`
     - export PERSIST_IMAGE_NAME=$PERSIST_IMAGE_NAME:$DOCKER_TAG
 
 build slurm base:
