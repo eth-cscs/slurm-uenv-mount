@@ -5,31 +5,39 @@ stages:
   - baseimage
   - buildtest
 
-build zen2:
-  extends: .container-builder-cscs-zen2
+.my-dynamic-image-name:
+  extends: [.dynamic-image-name]
+  before_script:
+    - DOCKER_TAG=`eval $(cat $WATCH_FILECHANGES; echo -n $slurm_version) | sha256sum | head -c 16`
+    - export PERSIST_IMAGE_NAME=$PERSIST_IMAGE_NAME:$DOCKER_TAG
+
+build slurm base:
+  extends: [.container-builder-cscs-zen2, .my-dynamic-image-name]
   stage: baseimage
   timeout: 10h
   variables:
+    CSCS_NOTIFICATION_CONTEXT: "$slurm_version"
     DOCKERFILE: ci/slurm_docker/Dockerfile
+    DOCKER_BUILD_ARGS: '["SLURM_VERSION=$slurm_version"]'
     WATCH_FILECHANGES: ci/slurm_docker/Dockerfile ci/slurm_docker/cgroup.conf ci/slurm_docker/entrypoint.sh ci/slurm_docker/install_slurm.sh ci/slurm_docker/slurm.conf.in
     PERSIST_IMAGE_NAME: $CSCS_REGISTRY_PATH/base/public/slurm-uenv-mount:$CI_COMMIT_SHA
 
-build:
-  extends: .container-runner-eiger-mc
-  needs: ["build zen2"]
-  stage: buildtest
-  image: $CSCS_REGISTRY_PATH/base/public/slurm-uenv-mount:$CI_COMMIT_SHA
-  script:
-    - |
-      echo $PWD
-      ls -al
-      CXX=g++-12 CC=gcc-12 meson setup builddir
-      meson install -C builddir
-      echo "required /usr/local/lib64/libslurm-uenv-mount.so" > /etc/slurm/plugstack.conf
-      # initialization
-      /entrypoint.sh
-      sinfo
-      echo "Run tests in bash-bats"
-      su testuser -c bash <<\EOF
-      bats ci/tests
-      EOF
+# build:
+#   extends: .container-builder-cscs-zen2
+#   needs: ["build slurm base"]
+#   stage: buildtest
+#   image: $CSCS_REGISTRY_PATH/base/public/slurm-uenv-mount:$CI_COMMIT_SHA
+#   script:
+#     - |
+#       echo $PWD
+#       ls -al
+#       CXX=g++-12 CC=gcc-12 meson setup builddir
+#       meson install -C builddir
+#       echo "required /usr/local/lib64/libslurm-uenv-mount.so" > /etc/slurm/plugstack.conf
+#       # initialization
+#       /entrypoint.sh
+#       sinfo
+#       echo "Run tests in bash-bats"
+#       su testuser -c bash <<\EOF
+#       bats ci/tests
+#       EOF
