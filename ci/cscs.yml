@@ -20,7 +20,7 @@ build slurm base:
     DOCKERFILE: ci/slurm_docker/Dockerfile
     DOCKER_BUILD_ARGS: '["SLURM_VERSION=$slurm_version"]'
     WATCH_FILECHANGES: ci/slurm_docker/Dockerfile ci/slurm_docker/cgroup.conf ci/slurm_docker/entrypoint.sh ci/slurm_docker/install_slurm.sh ci/slurm_docker/slurm.conf.in
-    PERSIST_IMAGE_NAME: $CSCS_REGISTRY_PATH/base/public/slurm-uenv-mount:$CI_COMMIT_SHA
+    PERSIST_IMAGE_NAME: $CSCS_REGISTRY_PATH/base/public/slurm-uenv-mount:$CI_COMMIT_SHA-$slurm_version
 
 # build:
 #   extends: .container-builder-cscs-zen2
