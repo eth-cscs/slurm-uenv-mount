@@ -10,6 +10,7 @@ stages:
   before_script:
     - DOCKER_TAG=`echo $(eval cat $WATCH_FILECHANGES; echo -n $slurm_version) | sha256sum | head -c 16`
     - export PERSIST_IMAGE_NAME=$PERSIST_IMAGE_NAME:$DOCKER_TAG
+    - echo "BASE_IMAGE=$PERSIST_IMAGE_NAME" > build.env
 
 build slurm base:
   extends: [.container-builder-cscs-zen2, .my-dynamic-image-name]
