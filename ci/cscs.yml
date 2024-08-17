@@ -3,7 +3,7 @@ include:
 
 stages:
   - baseimage
-  - buildtest
+  - build
 
 .my-dynamic-image-name:
   extends: [.dynamic-image-name]
@@ -26,10 +26,19 @@ build slurm base:
 build:
   extends: [.container-builder-cscs-zen2]
   needs: ["build slurm base"]
-  stage: buildtest
+  stage: build
   variables:
     CSCS_REBUILD_POLICY: always
     CSCS_NOTIFICATION_CONTEXT: "$slurm_version"
     DOCKERFILE: ci/slurm_docker/Dockerfile
     DOCKER_BUILD_ARGS: '["BASE_IMAGE=${BASE_IMAGE}"]'
     PERSIST_IMAGE_NAME: $CSCS_REGISTRY_PATH/base/public/slurm-uenv-mount
+
+
+# # initialization
+# /entrypoint.sh
+# sinfo
+# echo "Run tests in bash-bats"
+# su testuser -c bash <<\EOF
+# bats ci/tests
+# EOF
