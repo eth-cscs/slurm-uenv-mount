@@ -1,7 +1,7 @@
 #!/bin/bash
 
 dbus-launch
-sudo -u munge munged
+su munge -c munged
 
 : "${SLURM_CONF_IN=$SLURM_CONFDIR/slurm.conf.in}"
 : "${SLURM_CONF=$SLURM_CONFDIR/slurm.conf}"
