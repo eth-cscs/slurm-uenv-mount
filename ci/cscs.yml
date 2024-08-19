@@ -39,6 +39,7 @@ test:
   extends: .container-runner-eiger-mc
   needs: ["build"]
   stage: test
+  image: $CSCS_REGISTRY_PATH/base/public/slurm-uenv-mount
   script:
     - |
       # initialization
