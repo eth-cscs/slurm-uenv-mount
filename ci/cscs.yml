@@ -42,6 +42,6 @@ build rpm:
   image: $CSCS_REGISTRY_PATH/base/public/slurm-uenv-mount
   script:
     - |
-      _rpm_build_dir=/tmp/uenv-rpm
+      _rpm_build_dir=./
       mkdir -p ${_rpm_build_dir}
       /src/rpm/make-rpm.sh --slurm-version "${slurm_version}" ${_rpm_build_dir}
