@@ -4,7 +4,7 @@ include:
 stages:
   - baseimage
   - build
-  - test
+  - build rpm
 
 .my-dynamic-image-name:
   extends: [.dynamic-image-name]
@@ -35,17 +35,13 @@ build:
     DOCKER_BUILD_ARGS: '["BASE_IMAGE=${BASE_IMAGE}"]'
     PERSIST_IMAGE_NAME: $CSCS_REGISTRY_PATH/base/public/slurm-uenv-mount
 
-test:
+build rpm:
   extends: .container-runner-eiger-mc
   needs: ["build"]
-  stage: test
+  stage: build rpm
   image: $CSCS_REGISTRY_PATH/base/public/slurm-uenv-mount
   script:
     - |
-      # initialization
-      /entrypoint.sh
-      sinfo
-      echo "Run tests in bash-bats"
-      su testuser -c bash <<\EOF
-      bats ci/tests
-      EOF
+      _rpm_build_dir=/tmp/uenv-rpm
+      mkdir -p ${_rpm_build_dir}
+      /src/rpm/make-rpm.sh --slurm-version "${slurm_version}" ${_rpm_build_dir}
