@@ -44,4 +44,4 @@ build rpm:
     - |
       _rpm_build_dir=./
       mkdir -p ${_rpm_build_dir}
-      /src/rpm/make-rpm.sh --slurm-version "${slurm_version}" ${_rpm_build_dir}
+      CXX=g++-12 CC=gcc-12 /src/rpm/make-rpm.sh --slurm-version "${slurm_version}" ${_rpm_build_dir}
