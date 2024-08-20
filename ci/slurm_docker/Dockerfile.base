@@ -99,6 +99,3 @@ RUN chown testuser /home/testuser
 COPY ci/tests /tests
 
 COPY ci/slurm_docker/entrypoint.sh .
-ENTRYPOINT ["./entrypoint.sh"]
-CMD ["bash"]
-
