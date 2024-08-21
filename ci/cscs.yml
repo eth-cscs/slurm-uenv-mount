@@ -27,11 +27,11 @@ stages:
 
 build slurm base x86_64:
   stage: baseimage x86_64
-  extends: ['.build slurm base', .container-builder-cscs-zen2, .my-dynamic-image-name ]
+  extends: [.my-dynamic-image-name, '.build slurm base', .container-builder-cscs-zen2]
 
 build slurm base aarch64:
   stage: baseimage aarch64
-  extends: ['.build slurm base', .container-builder-cscs-gh200, .my-dynamic-image-name ]
+  extends: [.my-dynamic-image-name, '.build slurm base', .container-builder-cscs-gh200]
 
 .build:
   variables:
