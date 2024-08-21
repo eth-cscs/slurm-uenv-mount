@@ -53,6 +53,8 @@ build aarch64:
 
 
 .build rpm:
+  variables:
+    CSCS_NOTIFICATION_CONTEXT: "$slurm_version"
   image: $CSCS_REGISTRY_PATH/base/public/slurm-uenv-mount
   script:
     - |
