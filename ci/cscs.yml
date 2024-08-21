@@ -16,7 +16,7 @@ stages:
     - export PERSIST_IMAGE_NAME=$PERSIST_IMAGE_NAME:$DOCKER_TAG
     - echo "BASE_IMAGE=$PERSIST_IMAGE_NAME" > build.env
 
-build slurm base:
+.build slurm base:
   timeout: 10h
   variables:
     CSCS_NOTIFICATION_CONTEXT: "$slurm_version"
@@ -27,14 +27,13 @@ build slurm base:
 
 build slurm base x86_64:
   stage: baseimage x86_64
-  extends: ['build slurm base', .container-builder-cscs-zen2, .my-dynamic-image-name ]
+  extends: ['.build slurm base', .container-builder-cscs-zen2, .my-dynamic-image-name ]
 
 build slurm base aarch64:
   stage: baseimage aarch64
-  extends: ['build slurm base', .container-builder-cscs-gh200, .my-dynamic-image-name ]
+  extends: ['.build slurm base', .container-builder-cscs-gh200, .my-dynamic-image-name ]
 
-build:
-  needs: ["build slurm base"]
+.build:
   variables:
     CSCS_REBUILD_POLICY: always
     CSCS_NOTIFICATION_CONTEXT: "$slurm_version"
@@ -43,16 +42,17 @@ build:
     PERSIST_IMAGE_NAME: $CSCS_REGISTRY_PATH/base/public/slurm-uenv-mount
 
 build x86_64:
+  needs: ["build slurm base x86_64"]
   stage: build x86_64
-  extends: [build, .container-builder-cscs-zen2]
+  extends: [.build, .container-builder-cscs-zen2]
 
 build aarch64:
+  needs: ["build slurm base aarch64"]
   stage: build aarch64
-  extends: [build, .container-builder-cscs-gh200]
+  extends: [.build, .container-builder-cscs-gh200]
 
 
-build rpm:
-  needs: ["build"]
+.build rpm:
   image: $CSCS_REGISTRY_PATH/base/public/slurm-uenv-mount
   script:
     - |
@@ -61,9 +61,11 @@ build rpm:
       CXX=g++-12 CC=gcc-12 /src/rpm/make-rpm.sh --slurm-version "${slurm_version}" ${_rpm_build_dir}
 
 build rpm x86_64:
+  needs: ["build x86_64"]
   stage: build rpm x86_64
-  extends: ['build rpm', .container-runner-eiger-mc]
+  extends: ['.build rpm', .container-runner-eiger-mc]
 
 build rpm aarch64:
+  needs: ["build aarch64"]
   stage: build rpm aarch64
-  extends: ['build rpm', .container-runner-todi-gh200]
+  extends: ['.build rpm', .container-runner-todi-gh200]
