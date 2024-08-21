@@ -2,9 +2,12 @@ include:
 - remote: 'https://gitlab.com/cscs-ci/recipes/-/raw/master/templates/v2/.ci-ext.yml'
 
 stages:
-  - baseimage
-  - build
-  - build rpm
+  - baseimage x86_64
+  - build x86_64
+  - build rpm x86_64
+  - baseimage aarch64
+  - build aarch64
+  - build rpm aarch64
 
 .my-dynamic-image-name:
   extends: [.dynamic-image-name]
@@ -14,8 +17,6 @@ stages:
     - echo "BASE_IMAGE=$PERSIST_IMAGE_NAME" > build.env
 
 build slurm base:
-  extends: [.container-builder-cscs-zen2, .my-dynamic-image-name]
-  stage: baseimage
   timeout: 10h
   variables:
     CSCS_NOTIFICATION_CONTEXT: "$slurm_version"
@@ -24,10 +25,16 @@ build slurm base:
     WATCH_FILECHANGES: ci/slurm_docker/Dockerfile.base ci/slurm_docker/cgroup.conf ci/slurm_docker/entrypoint.sh ci/slurm_docker/install_slurm.sh ci/slurm_docker/slurm.conf.in
     PERSIST_IMAGE_NAME: $CSCS_REGISTRY_PATH/base/public/slurm-base
 
+build slurm base x86_64:
+  stage: baseimage x86_64
+  extends: ['build slurm base', .container-builder-cscs-zen2, .my-dynamic-image-name ]
+
+build slurm base aarch64:
+  stage: baseimage aarch64
+  extends: ['build slurm base', .container-builder-cscs-gh200, .my-dynamic-image-name ]
+
 build:
-  extends: [.container-builder-cscs-zen2]
   needs: ["build slurm base"]
-  stage: build
   variables:
     CSCS_REBUILD_POLICY: always
     CSCS_NOTIFICATION_CONTEXT: "$slurm_version"
@@ -35,13 +42,28 @@ build:
     DOCKER_BUILD_ARGS: '["BASE_IMAGE=${BASE_IMAGE}"]'
     PERSIST_IMAGE_NAME: $CSCS_REGISTRY_PATH/base/public/slurm-uenv-mount
 
+build x86_64:
+  stage: build x86_64
+  extends: [build, .container-builder-cscs-zen2]
+
+build aarch64:
+  stage: build aarch64
+  extends: [build, .container-builder-cscs-gh200]
+
+
 build rpm:
-  extends: .container-runner-eiger-mc
   needs: ["build"]
-  stage: build rpm
   image: $CSCS_REGISTRY_PATH/base/public/slurm-uenv-mount
   script:
     - |
       _rpm_build_dir=./
       mkdir -p ${_rpm_build_dir}
       CXX=g++-12 CC=gcc-12 /src/rpm/make-rpm.sh --slurm-version "${slurm_version}" ${_rpm_build_dir}
+
+build rpm x86_64:
+  stage: build rpm x86_64
+  extends: ['build rpm', .container-runner-eiger-mc]
+
+build rpm aarch64:
+  stage: build rpm aarch64
+  extends: ['build rpm', .container-runner-todi-gh200]
