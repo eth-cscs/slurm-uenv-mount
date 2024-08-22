@@ -39,18 +39,20 @@ build slurm base aarch64:
     CSCS_NOTIFICATION_CONTEXT: "$slurm_version"
     DOCKERFILE: ci/slurm_docker/Dockerfile
     DOCKER_BUILD_ARGS: '["BASE_IMAGE=${BASE_IMAGE}"]'
-    PERSIST_IMAGE_NAME: $CSCS_REGISTRY_PATH/base/public/slurm-uenv-mount
 
 build x86_64:
   needs: ["build slurm base x86_64"]
   stage: build x86_64
   extends: [.build, .container-builder-cscs-zen2]
+  variables:
+    PERSIST_IMAGE_NAME: $CSCS_REGISTRY_PATH/base/public/slurm-uenv-mount-x86_64
 
 build aarch64:
   needs: ["build slurm base aarch64"]
   stage: build aarch64
   extends: [.build, .container-builder-cscs-gh200]
-
+  variables:
+    PERSIST_IMAGE_NAME: $CSCS_REGISTRY_PATH/base/public/slurm-uenv-mount-aarch64
 
 .build rpm:
   variables:
@@ -66,11 +68,6 @@ build rpm x86_64:
   needs: ["build x86_64"]
   stage: build rpm x86_64
   extends: ['.build rpm', .container-runner-eiger-mc]
-
-# build rpm aarch64:
-#   needs: ["build aarch64"]
-#   stage: build rpm aarch64
-#   extends: ['.build rpm', .container-runner-todi-gh200]
 
 build rpm aarch64:
   needs: ["build aarch64"]
