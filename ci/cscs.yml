@@ -9,10 +9,11 @@ stages:
   - build aarch64
   - build rpm aarch64
 
+# dynamic name for sha on watched files, slurm version, uarch
 .my-dynamic-image-name:
   extends: [.dynamic-image-name]
   before_script:
-    - DOCKER_TAG=`echo $(eval cat $WATCH_FILECHANGES; echo -n $slurm_version) | sha256sum | head -c 16`
+    - DOCKER_TAG=`echo $(eval cat $WATCH_FILECHANGES; echo -n $slurm_version) $(uname -m) | sha256sum | head -c 16`
     - export PERSIST_IMAGE_NAME=$PERSIST_IMAGE_NAME:$DOCKER_TAG
     - echo "BASE_IMAGE=$PERSIST_IMAGE_NAME" > build.env
 
