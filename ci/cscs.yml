@@ -67,7 +67,17 @@ build rpm x86_64:
   stage: build rpm x86_64
   extends: ['.build rpm', .container-runner-eiger-mc]
 
+# build rpm aarch64:
+#   needs: ["build aarch64"]
+#   stage: build rpm aarch64
+#   extends: ['.build rpm', .container-runner-todi-gh200]
+
 build rpm aarch64:
   needs: ["build aarch64"]
   stage: build rpm aarch64
-  extends: ['.build rpm', .container-runner-todi-gh200]
+  extends: ['.build rpm', .f7t-container-runner]
+  variables:
+    F7T_URL: 'https://firecrest-todi.v1.tds.cscs.ch'
+    FIRECREST_SYSTEM: 'todi'
+    ARCH: 'aarch64'
+    USE_CE: 'YES'
