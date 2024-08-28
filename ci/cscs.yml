@@ -55,7 +55,7 @@ build aarch64:
   variables:
     PERSIST_IMAGE_NAME: $CSCS_REGISTRY_PATH/base/public/slurm-uenv-mount-aarch64
 
-.build rpm:
+.build rpm upload artifact:
   variables:
     CSCS_NOTIFICATION_CONTEXT: "$slurm_version"
   script:
@@ -63,21 +63,29 @@ build aarch64:
       _rpm_build_dir=./
       mkdir -p ${_rpm_build_dir}
       CXX=g++-12 CC=gcc-12 /src/rpm/make-rpm.sh --slurm-version "${slurm_version}" ${_rpm_build_dir}
-      rpm=$(find RPMS -name '*.rpm')
-      echo "$rpm"
+      binary_rpm=$(find RPMS -name '*.rpm')
+      # upload release
+      curl -L \
+        -X POST \
+        -H "Accept: application/vnd.github+json" \
+        -H "Authorization: Bearer ${GHUB_WRITE_TOKEN}" \
+        -H "X-GitHub-Api-Version: 2022-11-28" \
+        -H "Content-Type: application/octet-stream" \
+        "https://uploads.github.com/repos/eth-cscs/slurm-uenv-mount/releases/${CI_COMMIT_REF_NAME}/assets?name=$(basename ${binary_rpm})" \
+        --data-binary "@${binary_rpm}"
 
 
-build rpm x86_64:
+build rpm x86_64 and upload artifact:
   needs: ["build x86_64"]
   image: $CSCS_REGISTRY_PATH/base/public/slurm-uenv-mount-x86_64
   stage: build rpm x86_64
-  extends: ['.build rpm', .container-runner-eiger-mc]
+  extends: ['.build rpm upload artifact', .container-runner-eiger-mc]
 
-build rpm aarch64:
+build rpm aarch64 and upload artifact:
   needs: ["build aarch64"]
   image: $CSCS_REGISTRY_PATH/base/public/slurm-uenv-mount-aarch64
   stage: build rpm aarch64
-  extends: ['.build rpm', .f7t-container-runner]
+  extends: ['.build rpm upload artifact', .f7t-container-runner]
   variables:
     F7T_URL: 'https://firecrest-todi.v1.tds.cscs.ch'
     FIRECREST_SYSTEM: 'todi'
