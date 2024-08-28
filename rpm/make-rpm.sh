@@ -104,6 +104,7 @@ mkdir -p "${dstdir}"
       --define "set_build_flags CXXFLAGS=\"-O2 -Wall -Wpedantic\"" \
       --define "_smp_build_ncpus 1" \
       --define "_vpath_srcdir slurm-uenv-mount-${SLURM_UENV_MOUNT_VERSION}" \
+      --load ${_scriptdir}/macros.meson \
       --rebuild SRPMS/slurm-uenv-mount-*.src.rpm
   fi
 )
