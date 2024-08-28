@@ -75,8 +75,21 @@ build aarch64:
         -H "Content-Type: application/octet-stream" \
         "https://uploads.github.com/repos/eth-cscs/slurm-uenv-mount/releases/${CI_COMMIT_REF_NAME}/assets?name=$(basename ${binary_rpm})" \
         --data-binary "@${binary_rpm}")
-        # TODO check response.json
         echo "http_code: $ret"
+        if [ $http_code -eq 400 ]; then
+            echo "$http_code: Bad request, couldn't upload release"
+            exit 1
+        fi
+        # https://docs.github.com/en/rest/releases/assets?apiVersion=2022-11-28#upload-a-release-asset--status-codes
+        if [ $http_code -eq 201 ]; then
+            echo "$http_code: Successfully uploaded $(basename ${binary_rpm}) to release ${CI_COMMIT_REF_NAME}."
+            cat response.json
+        fi
+        if [ $http_code -eq 422 ]; then
+            echo "$http_code: Successfully replaced $(basename ${binary_rpm}) to release ${CI_COMMIT_REF_NAME}."
+            cat response.json
+        fi
+
 
 
 build rpm x86_64 and upload artifact:
