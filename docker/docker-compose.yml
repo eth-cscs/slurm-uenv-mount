@@ -7,6 +7,6 @@ services:
     build:
       context: ../
       args:
-        DOCKER_CONTAINER: ghcr.io/eth-cscs/slurm-container-20.11.9:latest
+        DOCKER_CONTAINER: ghcr.io/eth-cscs/slurm-container-23.02.6:latest
       dockerfile: docker/Dockerfile
     command: tail -F anything

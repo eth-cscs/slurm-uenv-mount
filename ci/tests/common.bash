@@ -30,7 +30,6 @@ function run_sbatch_unchecked() {
 
   log "${output}"
   logf "+ job log (${slurm_log}):\n$(cat ${slurm_log})"
-  rm -f "${slurm_log}"
 
   echo "+ exit status: ${status}"
 }

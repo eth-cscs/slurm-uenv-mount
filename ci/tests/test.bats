@@ -46,6 +46,7 @@ function teardown() {
     run_sbatch <<EOF
 #!/bin/bash
 #SBATCH --uenv=${SQFSDIR}/binaries.sqfs,${SQFSDIR}/profilers.sqfs:/user-profilers,${SQFSDIR}/tools.sqfs:/user-tools
+set -e
 srun findmnt /user-environment
 srun findmnt /user-profilers
 srun findmnt /user-tools
@@ -56,6 +57,7 @@ EOF
     run_sbatch <<EOF
 #!/bin/bash
 #SBATCH --uenv=${SQFSDIR}/binaries.sqfs,${SQFSDIR}/profilers.sqfs:/user-profilers,${SQFSDIR}/tools.sqfs:/user-tools
+set -e
 findmnt /user-environment
 findmnt /user-profilers
 findmnt /user-tools
@@ -93,6 +95,7 @@ EOF
     run_sbatch <<EOF
 #!/bin/bash
 #SBATCH --uenv=${SQFSDIR}/binaries.sqfs
+set -e
 
 # override --uenv and mount under /user-tools instead
 srun --uenv=${SQFSDIR}/binaries.sqfs:/user-tools findmnt /user-tools
@@ -106,6 +109,7 @@ EOF
     # check that images mounted via sbatch --uenv are overriden when `--uenv` flag is given to srun
     run_sbatch <<EOF
 #!/bin/bash
+set -e
 srun true
 EOF
 }
