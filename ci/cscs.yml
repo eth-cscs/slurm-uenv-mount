@@ -1,0 +1,110 @@
+include:
+- remote: 'https://gitlab.com/cscs-ci/recipes/-/raw/master/templates/v2/.ci-ext.yml'
+
+stages:
+  - baseimage x86_64
+  - build x86_64
+  - build rpm x86_64
+  - baseimage aarch64
+  - build aarch64
+  - build rpm aarch64
+
+# dynamic name for sha on watched files, slurm version, uarch
+.my-dynamic-image-name:
+  extends: [.dynamic-image-name]
+  before_script:
+    - DOCKER_TAG=`echo $(eval cat $WATCH_FILECHANGES; echo -n $slurm_version) $(uname -m) | sha256sum | head -c 16`
+    - export PERSIST_IMAGE_NAME=$PERSIST_IMAGE_NAME:$DOCKER_TAG
+    - echo "BASE_IMAGE=$PERSIST_IMAGE_NAME" > build.env
+
+.build slurm base:
+  timeout: 10h
+  variables:
+    CSCS_NOTIFICATION_CONTEXT: "$slurm_version"
+    DOCKERFILE: ci/slurm_docker/Dockerfile.base
+    DOCKER_BUILD_ARGS: '["SLURM_VERSION=$slurm_version"]'
+    WATCH_FILECHANGES: ci/slurm_docker/Dockerfile.base ci/slurm_docker/cgroup.conf ci/slurm_docker/entrypoint.sh ci/slurm_docker/install_slurm.sh ci/slurm_docker/slurm.conf.in
+    PERSIST_IMAGE_NAME: $CSCS_REGISTRY_PATH/base/public/slurm-base
+
+build slurm base x86_64:
+  stage: baseimage x86_64
+  extends: [.my-dynamic-image-name, '.build slurm base', .container-builder-cscs-zen2]
+
+build slurm base aarch64:
+  stage: baseimage aarch64
+  extends: [.my-dynamic-image-name, '.build slurm base', .container-builder-cscs-gh200]
+
+.build:
+  variables:
+    CSCS_REBUILD_POLICY: always
+    CSCS_NOTIFICATION_CONTEXT: "$slurm_version"
+    DOCKERFILE: ci/slurm_docker/Dockerfile
+    DOCKER_BUILD_ARGS: '["BASE_IMAGE=${BASE_IMAGE}"]'
+
+build x86_64:
+  needs: ["build slurm base x86_64"]
+  stage: build x86_64
+  extends: [.build, .container-builder-cscs-zen2]
+  variables:
+    PERSIST_IMAGE_NAME: $CSCS_REGISTRY_PATH/base/public/slurm-uenv-mount-x86_64
+
+build aarch64:
+  needs: ["build slurm base aarch64"]
+  stage: build aarch64
+  extends: [.build, .container-builder-cscs-gh200]
+  variables:
+    PERSIST_IMAGE_NAME: $CSCS_REGISTRY_PATH/base/public/slurm-uenv-mount-aarch64
+
+.build rpm upload artifact:
+  variables:
+    CSCS_NOTIFICATION_CONTEXT: "$slurm_version"
+  script:
+    - |
+      _rpm_build_dir=./
+      mkdir -p ${_rpm_build_dir}
+      CXX=g++-12 CC=gcc-12 /src/rpm/make-rpm.sh --slurm-version "${slurm_version}" ${_rpm_build_dir}
+      binary_rpm=$(find RPMS -name '*.rpm')
+      # upload release
+      ret=$(curl -L \
+        -X POST \
+        -o response.json \
+        -w "%{http_code}" \
+        -H "Accept: application/vnd.github+json" \
+        -H "Authorization: Bearer ${GHUB_WRITE_TOKEN}" \
+        -H "X-GitHub-Api-Version: 2022-11-28" \
+        -H "Content-Type: application/octet-stream" \
+        "https://uploads.github.com/repos/eth-cscs/slurm-uenv-mount/releases/${CI_COMMIT_REF_NAME}/assets?name=$(basename ${binary_rpm})" \
+        --data-binary "@${binary_rpm}")
+        echo "http_code: $ret"
+        if [ $http_code -eq 400 ]; then
+            echo "$http_code: Bad request, couldn't upload release"
+            exit 1
+        fi
+        # https://docs.github.com/en/rest/releases/assets?apiVersion=2022-11-28#upload-a-release-asset--status-codes
+        if [ $http_code -eq 201 ]; then
+            echo "$http_code: Successfully uploaded $(basename ${binary_rpm}) to release ${CI_COMMIT_REF_NAME}."
+            cat response.json
+        fi
+        if [ $http_code -eq 422 ]; then
+            echo "$http_code: Successfully replaced $(basename ${binary_rpm}) to release ${CI_COMMIT_REF_NAME}."
+            cat response.json
+        fi
+
+
+
+build rpm x86_64 and upload artifact:
+  needs: ["build x86_64"]
+  image: $CSCS_REGISTRY_PATH/base/public/slurm-uenv-mount-x86_64
+  stage: build rpm x86_64
+  extends: ['.build rpm upload artifact', .container-runner-eiger-mc]
+
+build rpm aarch64 and upload artifact:
+  needs: ["build aarch64"]
+  image: $CSCS_REGISTRY_PATH/base/public/slurm-uenv-mount-aarch64
+  stage: build rpm aarch64
+  extends: ['.build rpm upload artifact', .f7t-container-runner]
+  variables:
+    F7T_URL: 'https://firecrest-todi.v1.tds.cscs.ch'
+    FIRECREST_SYSTEM: 'todi'
+    ARCH: 'aarch64'
+    USE_CE: 'YES'
