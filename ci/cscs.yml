@@ -65,14 +65,18 @@ build aarch64:
       CXX=g++-12 CC=gcc-12 /src/rpm/make-rpm.sh --slurm-version "${slurm_version}" ${_rpm_build_dir}
       binary_rpm=$(find RPMS -name '*.rpm')
       # upload release
-      curl -L \
+      ret=$(curl -L \
         -X POST \
+        -o response.json \
+        -w "%{http_code}" \
         -H "Accept: application/vnd.github+json" \
         -H "Authorization: Bearer ${GHUB_WRITE_TOKEN}" \
         -H "X-GitHub-Api-Version: 2022-11-28" \
         -H "Content-Type: application/octet-stream" \
         "https://uploads.github.com/repos/eth-cscs/slurm-uenv-mount/releases/${CI_COMMIT_REF_NAME}/assets?name=$(basename ${binary_rpm})" \
-        --data-binary "@${binary_rpm}"
+        --data-binary "@${binary_rpm}")
+        # TODO check response.json
+        echo "http_code: $ret"
 
 
 build rpm x86_64 and upload artifact:
